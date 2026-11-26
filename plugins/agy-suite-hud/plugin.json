@@ -1,0 +1,13 @@
+{
+  "name": "agy-suite-hud",
+  "displayName": "AGY SUITE — HUD",
+  "version": "1.0.0",
+  "description": "AGY SUITE HUD — Native Antigravity auxiliary-pane sidecar and local control room for real-time reasoning summaries, swarm workers, auto-calibrating context compaction metering, and fail-closed quota telemetry. Zero dependencies and strictly offline by default.",
+  "logo": "assets/logo.svg",
+  "repository": "https://github.com/BBsouS/agy-suite",
+  "suggestedPrompts": [
+    "Open the AGY SUITE HUD sidecar pane with /hud",
+    "Launch the standalone AGY SUITE HUD control room window",
+    "Help me configure optional Gemini first-person monologue restoration in AGY SUITE HUD"
+  ]
+}

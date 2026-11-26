@@ -1,0 +1,13 @@
+{
+  "name": "agy-suite-core",
+  "displayName": "AGY SUITE — Core",
+  "version": "1.0.0",
+  "description": "AGY SUITE Core — Zero-dependency environment diagnostics (/doctor), comment-preserving JSONC settings patcher, safe bulk session archiver (/cleanup), and compact anti-stall agent rules.",
+  "logo": "assets/logo.svg",
+  "repository": "https://github.com/BBsouS/agy-suite",
+  "suggestedPrompts": [
+    "Run /doctor to check my Antigravity stability settings and environment health",
+    "Run /cleanup to preview idle conversations older than 7 days before archiving",
+    "Run /setup to review installed AGY SUITE modules and toggle options"
+  ]
+}

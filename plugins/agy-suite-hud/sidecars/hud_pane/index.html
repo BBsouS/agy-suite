@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AGY SUITE HUD</title>
+  <script src="/preload.js"></script>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body data-style="salon">
+  <div class="pane-shell">
+    <!-- Compact Header -->
+    <header class="pane-header">
+      <div class="header-left">
+        <span id="liveDot" class="status-dot" title="Connection status"></span>
+        <span id="paneTitle" class="pane-title">AGY SUITE HUD</span>
+        <span id="modeBadge" class="mode-badge">Auto</span>
+      </div>
+      <div class="header-actions">
+        <button id="btnFollowToggle" class="hdr-btn" type="button">Slots</button>
+        <button id="btnStyleToggle" class="hdr-btn" type="button">Salon</button>
+        <button id="btnRawToggle" class="hdr-btn" type="button">Restored</button>
+        <button id="btnLangToggle" class="hdr-btn" type="button" title="Switch language (한국어 / EN)">EN</button>
+        <button id="btnSettings" class="hdr-btn hdr-icon" type="button" title="Settings" aria-label="Settings">⚙</button>
+      </div>
+    </header>
+
+    <!-- Multi-Session Slot Bar -->
+    <nav id="slotBar" class="slot-bar hidden" aria-label="Active sessions"></nav>
+
+    <!-- Conversation Context & Speaker Bar -->
+    <section id="contextBar" class="context-bar hidden">
+      <div class="conv-meta-row">
+        <span id="convTopic" class="conv-topic"></span>
+        <div class="turn-nav">
+          <button id="btnPrevTurn" class="nav-btn" type="button" title="Previous turn">◀</button>
+          <span id="turnIndicator" class="turn-indicator">1/1</span>
+          <button id="btnNextTurn" class="nav-btn" type="button" title="Next turn">▶</button>
+          <button id="btnRestoreTurn" class="restore-btn hidden" type="button">Restore</button>
+        </div>
+      </div>
+      <div id="speakerRow" class="speaker-row"></div>
+    </section>
+
+    <!-- Inline Settings Drawer -->
+    <section id="settingsDrawer" class="settings-drawer hidden" aria-label="HUD settings">
+      <div class="settings-head">
+        <span id="lblSettingsTitle" class="settings-title">Engine Settings</span>
+        <button id="btnCloseSettings" class="hdr-btn" type="button">Close</button>
+      </div>
+      <div class="settings-grid">
+        <label class="field">
+          <span id="lblMode">Mode</span>
+          <select id="setMode">
+            <option value="raw">Raw Offline (0 bytes)</option>
+            <option value="gemini">Gemini API Restore</option>
+            <option value="translate">Google Translate (Opt-In)</option>
+          </select>
+        </label>
+        <label class="field">
+          <span id="lblTargetLang">Target Language</span>
+          <select id="setTargetLang">
+            <option value="ko">한국어 (ko)</option>
+            <option value="en">English (en)</option>
+            <option value="ja">日本語 (ja)</option>
+            <option value="zh-CN">中文 (zh-CN)</option>
+            <option value="es">Español (es)</option>
+            <option value="fr">Français (fr)</option>
+            <option value="de">Deutsch (de)</option>
+          </select>
+        </label>
+        <label class="field">
+          <span id="lblPreset">Prompt Preset</span>
+          <select id="setPreset">
+            <option value="engineer-default">First-Person Monologue</option>
+            <option value="concise-bullet">Key-Point Bullets</option>
+            <option value="custom">Custom Prompt</option>
+          </select>
+        </label>
+        <label class="field">
+          <span id="lblTimezone">Timezone</span>
+          <input id="setTimezone" type="text" placeholder="Asia/Seoul" />
+        </label>
+      </div>
+      <label class="field field-full">
+        <span id="lblModels">Gemini Models (comma-separated)</span>
+        <input id="setModels" type="text" placeholder="gemini-2.5-flash, gemini-flash-lite-latest" />
+      </label>
+      <label class="field field-full">
+        <span id="lblApiKey">Dedicated Gemini API Key (optional)</span>
+        <div class="key-input-row">
+          <input id="setApiKey" type="password" autocomplete="off" placeholder="Leave blank to keep existing key" />
+          <button id="btnClearKey" class="hdr-btn" type="button">Clear</button>
+        </div>
+      </label>
+      <div class="settings-status-row">
+        <span id="credSummary" class="cred-summary"></span>
+        <div class="settings-btns">
+          <button id="btnTestConn" class="hdr-btn" type="button">Test Key</button>
+          <button id="btnSaveSettings" class="hdr-btn hdr-primary" type="button">Save</button>
+        </div>
+      </div>
+      <div id="settingsMsg" class="settings-msg hidden"></div>
+    </section>
+
+    <!-- User Prompt Quote -->
+    <div id="promptStrip" class="prompt-strip hidden">
+      <span class="prompt-label">Q</span>
+      <span id="promptText" class="prompt-text"></span>
+    </div>
+
+    <!-- Main Thought Stream -->
+    <main id="thoughtFeed" class="thought-feed"></main>
+
+    <!-- Bottom Docked Context & Quota Telemetry Strip -->
+    <section id="telemetryDock" class="telemetry-dock" aria-label="Context and quota telemetry">
+      <div class="meter-row" id="contextMeterRow">
+        <div class="meter-left">
+          <span id="lblMeterCtx" class="meter-label">CTX</span>
+          <button id="btnContextCap" class="meter-cap-btn" type="button">--</button>
+          <div class="meter-track"><div id="contextMeterFill" class="meter-fill"></div></div>
+          <span id="contextMeterPct" class="meter-pct">--%</span>
+        </div>
+        <div class="meter-right">
+          <span id="cacheHitBadge" class="meter-chip hidden">KV --%</span>
+          <span id="compactionBadge" class="meter-chip chip-warn hidden">Compact 0</span>
+        </div>
+      </div>
+      <div class="meter-row meter-row-quota" id="quotaMeterRow">
+        <div id="quotaItems" class="quota-items">
+          <span class="quota-loading">Loading quota…</span>
+        </div>
+        <button id="btnRefreshQuota" class="quota-refresh-btn" type="button" title="Refresh quota (0 tokens)">↻</button>
+      </div>
+    </section>
+
+    <!-- Compact Footer -->
+    <footer class="pane-footer">
+      <span id="footerStatus" class="footer-status">Connecting...</span>
+      <div class="footer-right-group">
+        <button id="btnMeterToggle" class="footer-toggle-btn" type="button">Meter</button>
+        <span id="footerRight" class="footer-right"></span>
+      </div>
+    </footer>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

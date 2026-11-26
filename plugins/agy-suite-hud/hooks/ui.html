@@ -1,0 +1,2766 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b0f1a" />
+  <meta name="room-token" content="" />
+  <meta name="server-boot-id" content="" />
+  <meta name="storage-prefix" content="agy_suite_hud_" />
+  <title>AGY SUITE HUD</title>
+  <style>
+    :root {
+      --bg-base: #090d16;
+      --bg-panel: #101626;
+      --bg-card: #12192b;
+      --bg-card-header: #161f36;
+      --bg-step: #0e1424;
+      --bg-quote: rgba(56, 189, 248, 0.07);
+      --border-subtle: rgba(148, 163, 184, 0.14);
+      --border-active: rgba(125, 211, 252, 0.42);
+      --text-main: #e5ecf6;
+      --text-muted: #93a3b8;
+      --text-dim: #64748b;
+      --accent-blue: #7dd3fc;
+      --accent-indigo: #818cf8;
+      --accent-rose: #f472b6;
+      --accent-emerald: #34d399;
+      --accent-amber: #fbbf24;
+      --accent-red: #f87171;
+      --font-scale: 1;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: radial-gradient(circle at top right, #141d35 0%, var(--bg-base) 55%);
+      color: var(--text-main);
+      font-family: "Pretendard Variable", "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", "Segoe UI", system-ui, sans-serif;
+      overflow: hidden;
+      user-select: text;
+    }
+
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 14px;
+      background: rgba(13, 18, 32, 0.92);
+      border-bottom: 1px solid var(--border-subtle);
+      backdrop-filter: blur(10px);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 10px var(--accent-emerald);
+      flex-shrink: 0;
+      transition: background 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .brand-mark.disconnected {
+      background: var(--accent-amber);
+      box-shadow: 0 0 10px var(--accent-amber);
+    }
+
+    .brand-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #f8fafc;
+      white-space: nowrap;
+    }
+
+    .mode-badge {
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: rgba(148, 163, 184, 0.12);
+      color: #cbd5e1;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .mode-badge.mode-raw {
+      background: rgba(52, 211, 153, 0.13);
+      border-color: rgba(52, 211, 153, 0.32);
+      color: var(--accent-emerald);
+    }
+
+    .mode-badge.mode-gemini {
+      background: rgba(125, 211, 252, 0.15);
+      border-color: rgba(125, 211, 252, 0.35);
+      color: var(--accent-blue);
+    }
+
+    .mode-badge.mode-translate {
+      background: rgba(251, 191, 36, 0.14);
+      border-color: rgba(251, 191, 36, 0.34);
+      color: var(--accent-amber);
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .seg-group {
+      display: inline-flex;
+      background: #0b101d;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover:not(:disabled) {
+      color: #f8fafc;
+      background: rgba(148, 163, 184, 0.12);
+    }
+
+    .btn:disabled {
+      opacity: 0.38;
+      cursor: default;
+    }
+
+    .btn.active {
+      background: rgba(125, 211, 252, 0.16);
+      color: var(--accent-blue);
+      border-color: rgba(125, 211, 252, 0.32);
+    }
+
+    .btn-outline {
+      background: #0d1322;
+      border-color: var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .btn-primary {
+      background: rgba(14, 165, 233, 0.22);
+      border-color: rgba(56, 189, 248, 0.45);
+      color: #e0f2fe;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: rgba(14, 165, 233, 0.34);
+    }
+
+    .btn-danger {
+      background: rgba(248, 113, 113, 0.14);
+      border-color: rgba(248, 113, 113, 0.35);
+      color: #fecaca;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(248, 113, 113, 0.24);
+    }
+
+    .btn-restore {
+      background: rgba(129, 140, 248, 0.18);
+      border-color: rgba(129, 140, 248, 0.4);
+      color: #c7d2fe;
+    }
+
+    .btn-restore:hover:not(:disabled) {
+      background: rgba(129, 140, 248, 0.28);
+      color: #eef2ff;
+    }
+
+    .btn-close {
+      padding: 4px 7px;
+      color: var(--text-dim);
+    }
+
+    .btn-close:hover:not(:disabled) {
+      background: rgba(248, 113, 113, 0.16);
+      border-color: rgba(248, 113, 113, 0.34);
+      color: #fca5a5;
+    }
+
+    .btn-undismiss-bar {
+      background: rgba(129, 140, 248, 0.14);
+      border-color: rgba(129, 140, 248, 0.32);
+      color: #c7d2fe;
+      display: none;
+    }
+
+    .btn-undismiss-bar.visible {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    /* Main Grid Area */
+    .board {
+      flex: 1;
+      min-height: 0;
+      padding: 10px;
+      display: grid;
+      gap: 10px;
+      overflow-y: auto;
+    }
+
+    .board.cols-1 { grid-template-columns: minmax(0, 1fr); }
+    .board.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .board.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .board.single-row { grid-auto-rows: minmax(0, 1fr); }
+    .board.two-rows { grid-auto-rows: minmax(340px, 1fr); }
+
+    @media (max-width: 820px) {
+      .board.cols-2, .board.cols-3 { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    .session-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 300px;
+      height: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.34);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+
+    .session-card.hidden-by-focus { display: none !important; }
+    .session-card.dismissed-card { opacity: 0.72; border-style: dashed; }
+    .session-card.thinking {
+      border-color: var(--border-active);
+      box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.16), 0 10px 28px rgba(2, 8, 23, 0.55);
+    }
+
+    .session-card.has-running-swarm:not(.thinking) {
+      border-color: rgba(129, 140, 248, 0.48);
+      box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.18), 0 10px 28px rgba(2, 8, 23, 0.55);
+    }
+
+    .session-card.swarm-view {
+      border-color: rgba(129, 140, 248, 0.44);
+      box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.14), 0 10px 28px rgba(2, 8, 23, 0.55);
+    }
+
+    .session-card.swarm-view.thinking {
+      border-color: rgba(129, 140, 248, 0.72);
+      box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.24), 0 10px 30px rgba(2, 8, 23, 0.6);
+    }
+
+    .session-card.swarm-view .user-prompt-box {
+      background: rgba(129, 140, 248, 0.09);
+      border-left-color: var(--accent-indigo);
+      color: #e0e7ff;
+    }
+
+    .session-card.swarm-view .user-prompt-label {
+      color: #a5b4fc;
+    }
+
+    .session-card.swarm-view .thought-subhead {
+      color: #a5b4fc;
+    }
+
+    .swarm-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(129, 140, 248, 0.18);
+      border: 1px solid rgba(129, 140, 248, 0.42);
+      color: #c7d2fe;
+      flex-shrink: 0;
+    }
+
+    .swarm-tab-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px 6px;
+      max-height: 92px;
+      overflow-y: auto;
+      padding: 4px 5px;
+      margin: -2px -5px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+    }
+
+    .swarm-tab-bar::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .swarm-tab-bar::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.35);
+      border-radius: 999px;
+    }
+
+    .swarm-tab-bar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .swarm-tab {
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      max-width: 100%;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(15, 23, 42, 0.65);
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .swarm-tab:hover {
+      color: #f8fafc;
+      background: rgba(148, 163, 184, 0.14);
+    }
+
+    .swarm-tab.active {
+      background: rgba(125, 211, 252, 0.18);
+      border-color: rgba(125, 211, 252, 0.44);
+      color: var(--accent-blue);
+    }
+
+    .swarm-tab.worker {
+      border-color: rgba(129, 140, 248, 0.26);
+      color: #a5b4fc;
+    }
+
+    .swarm-tab.worker:hover {
+      background: rgba(129, 140, 248, 0.14);
+      color: #e0e7ff;
+    }
+
+    .swarm-tab.worker.active {
+      background: rgba(129, 140, 248, 0.22);
+      border-color: rgba(129, 140, 248, 0.56);
+      color: #e0e7ff;
+    }
+
+    .swarm-tab.running {
+      background: rgba(14, 165, 233, 0.24);
+      border-color: rgba(56, 189, 248, 0.85);
+      color: #f0f9ff;
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.28), 0 0 12px rgba(56, 189, 248, 0.32);
+      animation: swarmPulseBlue 1.8s infinite ease-in-out;
+    }
+
+    .swarm-tab.running.active {
+      background: rgba(14, 165, 233, 0.34);
+      border-color: #7dd3fc;
+      color: #ffffff;
+    }
+
+    .swarm-tab.worker.running {
+      background: rgba(99, 102, 241, 0.28);
+      border-color: rgba(129, 140, 248, 0.9);
+      color: #eef2ff;
+      box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.34), 0 0 13px rgba(129, 140, 248, 0.38);
+      animation: swarmPulseIndigo 1.8s infinite ease-in-out;
+    }
+
+    .swarm-tab.worker.running.active {
+      background: rgba(99, 102, 241, 0.38);
+      border-color: #c7d2fe;
+      color: #ffffff;
+    }
+
+    @keyframes swarmPulseBlue {
+      0%, 100% {
+        box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3), 0 0 6px rgba(56, 189, 248, 0.24);
+      }
+      50% {
+        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.55), 0 0 11px rgba(56, 189, 248, 0.48);
+      }
+    }
+
+    @keyframes swarmPulseIndigo {
+      0%, 100% {
+        box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.32), 0 0 6px rgba(129, 140, 248, 0.26);
+      }
+      50% {
+        box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.6), 0 0 11px rgba(129, 140, 248, 0.52);
+      }
+    }
+
+    .swarm-live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-blue);
+      animation: pulseDot 1.15s infinite ease-in-out;
+      flex-shrink: 0;
+    }
+
+    .swarm-tab.worker .swarm-live-dot {
+      background: var(--accent-indigo);
+    }
+
+    .swarm-live-tag {
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      padding: 1px 5px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.26);
+      color: #e0f2fe;
+      border: 1px solid rgba(125, 211, 252, 0.45);
+      line-height: 1.25;
+      flex-shrink: 0;
+    }
+
+    .swarm-tab.worker .swarm-live-tag {
+      background: rgba(129, 140, 248, 0.28);
+      color: #e0e7ff;
+      border-color: rgba(199, 210, 254, 0.52);
+    }
+
+    .card-header {
+      padding: 9px 12px 8px;
+      background: var(--bg-card-header);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .card-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .slot-meta {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .slot-badge {
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(129, 140, 248, 0.18);
+      border: 1px solid rgba(129, 140, 248, 0.36);
+      color: #c7d2fe;
+      flex-shrink: 0;
+    }
+
+    .slot-badge.unslotted {
+      background: rgba(148, 163, 184, 0.12);
+      border-color: rgba(148, 163, 184, 0.25);
+      color: var(--text-muted);
+    }
+
+    .dismissed-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 5px;
+      background: rgba(148, 163, 184, 0.14);
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+
+    .status-pill.running {
+      background: rgba(56, 189, 248, 0.16);
+      color: var(--accent-blue);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    .status-pill.running::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-blue);
+      animation: pulseDot 1.15s infinite ease-in-out;
+    }
+
+    .status-pill.done {
+      background: rgba(52, 211, 153, 0.11);
+      color: var(--accent-emerald);
+      border: 1px solid rgba(52, 211, 153, 0.25);
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.75); }
+    }
+
+    .session-topic {
+      font-size: 13px;
+      font-weight: 700;
+      color: #f1f5f9;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    .turn-nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .turn-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .turn-label {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      padding: 0 4px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .turn-time {
+      font-size: 11.5px;
+      color: var(--text-dim);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 11px 13px 16px;
+      font-size: calc(14px * var(--font-scale));
+      line-height: 1.68;
+      scroll-behavior: smooth;
+    }
+
+    .card-body::-webkit-scrollbar { width: 7px; }
+    .card-body::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.22);
+      border-radius: 999px;
+    }
+
+    .user-prompt-box {
+      background: var(--bg-quote);
+      border-left: 3px solid var(--accent-blue);
+      border-radius: 6px;
+      padding: 7px 10px;
+      margin-bottom: 11px;
+      font-size: calc(13px * var(--font-scale));
+      color: #dbeafe;
+    }
+
+    .user-prompt-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 2px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .user-prompt-text {
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 86px;
+      overflow-y: auto;
+    }
+
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .step-block {
+      background: var(--bg-step);
+      border: 1px solid rgba(148, 163, 184, 0.11);
+      border-radius: 9px;
+      padding: 9px 12px;
+    }
+
+    .step-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 7px;
+      padding-bottom: 5px;
+      border-bottom: 1px dashed rgba(148, 163, 184, 0.12);
+      font-size: 11.5px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .step-title { font-weight: 700; color: #cbd5e1; }
+    .tool-chips { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+
+    .tool-chip {
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 10.5px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(129, 140, 248, 0.13);
+      color: #a5b4fc;
+      border: 1px solid rgba(129, 140, 248, 0.24);
+    }
+
+    .thought-prose p {
+      margin: 0 0 9px;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    .thought-prose p:last-child { margin-bottom: 0; }
+
+    .thought-subhead {
+      display: block;
+      font-size: calc(13.5px * var(--font-scale));
+      font-weight: 800;
+      color: var(--accent-blue);
+      margin: 10px 0 4px;
+      letter-spacing: -0.01em;
+    }
+
+    .thought-prose > .thought-subhead:first-child { margin-top: 0; }
+
+    .thought-prose code, .md-link-chip {
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.89em;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: #bae6fd;
+    }
+
+    .thought-prose pre {
+      background: #070a12;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 8px 10px;
+      overflow-x: auto;
+      margin: 6px 0;
+    }
+
+    .thought-prose pre code {
+      border: none;
+      background: transparent;
+      padding: 0;
+    }
+
+    details.sub-toggle {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    details.sub-toggle summary {
+      cursor: pointer;
+      color: var(--text-dim);
+      user-select: none;
+      font-weight: 600;
+    }
+
+    details.sub-toggle summary:hover { color: var(--text-main); }
+
+    .sub-toggle-body {
+      margin-top: 6px;
+      padding: 8px 10px;
+      background: rgba(7, 10, 18, 0.72);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #94a3b8;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .jump-bottom-pill {
+      position: absolute;
+      bottom: 12px;
+      right: 16px;
+      background: rgba(14, 165, 233, 0.92);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+      display: none;
+      z-index: 5;
+    }
+
+    .jump-bottom-pill.visible {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      gap: 10px;
+      height: 60vh;
+      font-size: 14px;
+      text-align: center;
+      padding: 0 24px;
+    }
+
+    /* Settings Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.76);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 50;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal-panel {
+      width: 100%;
+      max-width: 620px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-card);
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      border-radius: 14px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: var(--bg-card-header);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .modal-body {
+      padding: 16px 18px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 18px;
+      background: rgba(13, 18, 32, 0.9);
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .field-hint {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    .input, .select, .textarea {
+      width: 100%;
+      background: #090e1a;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 8px 10px;
+      outline: none;
+    }
+
+    .input:focus, .select:focus, .textarea:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .textarea {
+      min-height: 92px;
+      resize: vertical;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .mode-grid { grid-template-columns: 1fr; }
+    }
+
+    .mode-option {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      background: #0b1120;
+      cursor: pointer;
+      text-align: left;
+      color: var(--text-main);
+      font-family: inherit;
+    }
+
+    .mode-option:hover { border-color: rgba(125, 211, 252, 0.35); }
+    .mode-option.selected {
+      border-color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.11);
+    }
+
+    .mode-option-title { font-size: 12.5px; font-weight: 700; }
+    .mode-option-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+
+    .consent-box {
+      display: none;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      color: #fde68a;
+      font-size: 12px;
+      line-height: 1.5;
+      gap: 8px;
+      flex-direction: column;
+    }
+
+    .consent-box.visible { display: flex; }
+
+    .consent-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .inline-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .status-banner {
+      font-size: 12px;
+      min-height: 18px;
+      color: var(--text-muted);
+    }
+
+    .status-banner.ok { color: var(--accent-emerald); }
+    .status-banner.err { color: var(--accent-red); }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span id="connDot" class="brand-mark"></span>
+        <span id="brandTitle" class="brand-title">AGY SUITE HUD</span>
+        <span id="modeBadge" class="mode-badge mode-raw">RAW</span>
+        <span id="summaryStatus" class="brand-sub"></span>
+      </div>
+
+      <div class="toolbar">
+        <button id="undismissBarBtn" class="btn btn-undismiss-bar" type="button"></button>
+
+        <div class="seg-group" id="filterGroup">
+          <button id="filterActiveBtn" class="btn active" type="button"></button>
+          <button id="filterAllBtn" class="btn" type="button"></button>
+        </div>
+
+        <div class="seg-group" id="layoutGroup">
+          <button class="btn layout-btn active" data-cols="auto" type="button"></button>
+          <button class="btn layout-btn" data-cols="1" type="button"></button>
+          <button class="btn layout-btn" data-cols="2" type="button"></button>
+          <button class="btn layout-btn" data-cols="3" type="button"></button>
+        </div>
+
+        <div class="seg-group" id="fontGroup">
+          <button id="fontDownBtn" class="btn" type="button">A-</button>
+          <button id="fontUpBtn" class="btn" type="button">A+</button>
+        </div>
+
+        <div class="seg-group" id="langGroup">
+          <button id="langKoBtn" class="btn" type="button">한국어</button>
+          <button id="langEnBtn" class="btn" type="button">English</button>
+        </div>
+
+        <button id="settingsBtn" class="btn btn-outline" type="button"></button>
+        <button id="refreshBtn" class="btn btn-outline" type="button"></button>
+      </div>
+    </header>
+
+    <main id="board" class="board cols-1 single-row"></main>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h2 id="modalTitle" class="modal-title"></h2>
+        <button id="closeSettingsBtn" class="btn btn-close" type="button">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field-group">
+          <div class="field-label"><span id="lblMode"></span></div>
+          <div class="mode-grid">
+            <button type="button" class="mode-option" data-mode="raw">
+              <span class="mode-option-title" id="optRawTitle"></span>
+              <span class="mode-option-desc" id="optRawDesc"></span>
+            </button>
+            <button type="button" class="mode-option" data-mode="gemini">
+              <span class="mode-option-title" id="optGeminiTitle"></span>
+              <span class="mode-option-desc" id="optGeminiDesc"></span>
+            </button>
+            <button type="button" class="mode-option" data-mode="translate">
+              <span class="mode-option-title" id="optTranslateTitle"></span>
+              <span class="mode-option-desc" id="optTranslateDesc"></span>
+            </button>
+          </div>
+          <div id="translateConsentBox" class="consent-box">
+            <div id="translateConsentText"></div>
+            <div class="consent-actions">
+              <button id="translateCancelBtn" type="button" class="btn btn-outline"></button>
+              <button id="translateConfirmBtn" type="button" class="btn btn-primary"></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group" id="targetLangGroup">
+          <label class="field-label" for="targetLangSelect" id="lblTargetLang"></label>
+          <select id="targetLangSelect" class="select">
+            <option value="ko">한국어 (ko)</option>
+            <option value="en">English (en)</option>
+            <option value="ja">日本語 (ja)</option>
+            <option value="zh-CN">中文 (zh-CN)</option>
+            <option value="es">Español (es)</option>
+            <option value="fr">Français (fr)</option>
+            <option value="de">Deutsch (de)</option>
+          </select>
+        </div>
+
+        <div class="field-group" id="geminiConfigSection">
+          <div class="field-label">
+            <span id="lblApiKey"></span>
+            <span id="apiKeyStatusBadge" class="field-hint"></span>
+          </div>
+          <div class="inline-row">
+            <input id="apiKeyInput" class="input" type="password" autocomplete="off" />
+            <button id="testKeyBtn" type="button" class="btn btn-outline"></button>
+            <button id="clearKeyBtn" type="button" class="btn btn-danger"></button>
+          </div>
+          <div id="apiKeyHint" class="field-hint"></div>
+          <div id="testKeyResult" class="status-banner"></div>
+        </div>
+
+        <div class="field-group" id="modelsGroup">
+          <label class="field-label" for="modelsInput" id="lblModels"></label>
+          <input id="modelsInput" class="input" type="text" />
+          <div id="modelsHint" class="field-hint"></div>
+        </div>
+
+        <div class="field-group" id="presetGroup">
+          <label class="field-label" for="presetSelect" id="lblPreset"></label>
+          <select id="presetSelect" class="select">
+            <option value="engineer-default"></option>
+            <option value="concise-bullet"></option>
+            <option value="custom"></option>
+          </select>
+        </div>
+
+        <div class="field-group" id="customPromptGroup" style="display:none">
+          <label class="field-label" for="customPromptInput" id="lblCustomPrompt"></label>
+          <textarea id="customPromptInput" class="textarea"></textarea>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="timezoneInput" id="lblTimezone"></label>
+          <input id="timezoneInput" class="input" type="text" list="tzPresets" />
+          <datalist id="tzPresets">
+            <option value="Asia/Seoul"></option>
+            <option value="UTC"></option>
+            <option value="America/New_York"></option>
+            <option value="America/Los_Angeles"></option>
+            <option value="Europe/London"></option>
+            <option value="Asia/Tokyo"></option>
+          </datalist>
+          <div id="timezoneHint" class="field-hint"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div id="settingsFeedback" class="status-banner"></div>
+        <div class="inline-row">
+          <button id="cancelSettingsBtn" type="button" class="btn btn-outline"></button>
+          <button id="saveSettingsBtn" type="button" class="btn btn-primary"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_PREFIX =
+      document.querySelector('meta[name="storage-prefix"]')?.getAttribute('content') ||
+      'agy_suite_hud_';
+
+    const I18N = {
+      ko: {
+        title: 'AGY SUITE HUD · 추론 관제실',
+        connecting: '연결 중...',
+        filterActive: '활성 슬롯',
+        filterAll: '전체 최근',
+        layoutAuto: '자동 배치',
+        layoutCols: (n) => `${n}열`,
+        settings: '설정',
+        refresh: '새로고침',
+        undismissAll: (n) => `닫은 창 복원 (${n})`,
+        summaryRunning: (open, run) => `표시 ${open}개 · 실시간 추론 중 ${run}개`,
+        summaryIdle: (open, total) => `표시 ${open}개 · 전체 최근 ${total}개`,
+        emptyDismissed: (n) =>
+          `현재 열어 둔 활성 추론 창이 없습니다. (닫은 세션 ${n}개 — 새 대화가 시작되면 자동으로 다시 뜨며, 상단 '닫은 창 복원'이나 '전체 최근' 탭에서 언제든 다시 열 수 있습니다.)`,
+        emptyDefault: '아직 표시할 추론 세션이 없습니다. 반중력에서 대화를 시작하면 즉시 나타납니다.',
+        slotLabel: (slot, shortId) => (slot ? `슬롯 ${slot}` : `보관 (${shortId})`),
+        dismissedTag: '닫힘',
+        statusComplete: '응답 완료',
+        statusThinking: '추론 진행 중',
+        stepsSuffix: (n) => `${n}단계`,
+        restoreBtn: '복원 실행',
+        restoringBtn: '복원 중...',
+        pinBtn: '핀',
+        pinTitle: '활성 창에 계속 고정',
+        focusBtn: '확대',
+        unfocusBtn: '복귀',
+        focusTitle: '이 세션만 크게 보기 (Esc 복귀)',
+        reopenBtn: '다시 열기',
+        dismissTitle: '이 추론 창 닫기 (새 추론 발생 시 자동 재표시)',
+        prevTurn: '◀ 이전',
+        nextTurn: '다음 ▶',
+        turnLabel: (cur, total, latest) =>
+          `턴 ${cur} / ${total}${latest ? ' (최신)' : ' (과거 열람 중)'}`,
+        latestBtn: '최신으로',
+        latestLiveBtn: '새 추론 진행 중 → 최신',
+        mainTab: '메인',
+        swarmLiveTag: '동작 중',
+        userPromptLabel: (n) => `사용자 입력 (턴 ${n})`,
+        swarmPromptLabel: (n) => `스웜 배정 임무 (턴 ${n})`,
+        noThoughtSteps: '이 턴에는 별도로 기록된 추론 단계가 없습니다.',
+        noThoughtBody: '추론 본문 없음',
+        finalStepLabel: '최종 응답 추론',
+        stepLabel: (n) => `단계 ${n}`,
+        showOriginal: '원문 추론 요약 보기',
+        showFinalReply: '이 턴의 최종 답변 함께 보기',
+        loadingTurn: '턴 기록을 불러오는 중입니다...',
+        turnLoadError: '턴 기록을 불러오지 못했습니다.',
+        jumpBottom: '↓ 새 추론 도착',
+        modeNames: { raw: 'RAW · 오프라인', gemini: 'GEMINI API', translate: 'TRANSLATE' },
+        modalTitle: 'AGY SUITE HUD 설정',
+        lblMode: '복원 및 네트워크 모드 (기본값: 완전 오프라인)',
+        optRawTitle: 'Raw 오프라인 (기본)',
+        optRawDesc: '외부 전송 0바이트. 상투구 정제 후 원문을 즉시 표시합니다.',
+        optGeminiTitle: 'Gemini API 복원',
+        optGeminiDesc: '공식 generativelanguage.googleapis.com만 호출해 1인칭 독백으로 복원합니다.',
+        optTranslateTitle: '무료 번역 (Opt-In)',
+        optTranslateDesc: '명시적 동의 시 translate.googleapis.com으로 추론 원문을 번역합니다.',
+        translateConsentText:
+          '안내: 무료 번역 모드를 선택하면 추론 요약 텍스트가 외부 도메인(translate.googleapis.com)으로 전송됩니다. 이 전송에 동의하고 번역 모드를 사용하시겠습니까?',
+        translateCancel: '취소',
+        translateConfirm: '동의 후 선택',
+        lblTargetLang: '목표 언어',
+        lblApiKey: '전용 Gemini API 키 (secrets.json 독립 저장)',
+        apiKeyConfigured: (mask) => `저장됨 (${mask})`,
+        apiKeyNotSet: '미설정',
+        apiKeyPlaceholder: '새 키 입력 (비워두면 기존 키 유지)',
+        apiKeyHint: '시스템 환경변수(GEMINI_API_KEY)를 무단 참조하지 않으며 이 플러그인 전용 파일에만 저장됩니다.',
+        testKey: '연결 테스트',
+        testingKey: '테스트 중...',
+        clearKey: '키 삭제',
+        keyClearedPending: '저장 시 기존 API 키가 삭제됩니다.',
+        lblModels: '모델 체인 (쉼표 구분, 최대 5개)',
+        modelsHint: '기본값: gemini-2.5-flash, gemini-flash-lite-latest (영숫자·점·밑줄·하이픈만 허용)',
+        lblPreset: '독백 복원 프롬프트 프리셋',
+        presetEngineer: '담백한 1인칭 엔지니어 독백 (기본)',
+        presetBullet: '핵심 요약 불릿',
+        presetCustom: '커스텀 프롬프트',
+        lblCustomPrompt: '커스텀 시스템 프롬프트 (최대 4000자)',
+        lblTimezone: '표시 타임존 (IANA)',
+        timezoneHint: '예: Asia/Seoul, UTC, America/New_York, Asia/Tokyo',
+        cancel: '닫기',
+        save: '저장',
+        saving: '저장 중...',
+        savedOk: '설정이 저장되었습니다. (과거 턴은 자동 재과금되지 않습니다)',
+        testOk: (m) => `연결 성공 (${m})`,
+        testErr: {
+          invalid_key: 'API 키 인증 실패 (401/403)',
+          model_not_found: '모델을 찾을 수 없음 (404)',
+          rate_limited: '요청이 너무 빠릅니다. 잠시 후 다시 시도하십시오.',
+          missing_key: 'API 키를 먼저 입력하거나 저장하십시오.',
+          invalid_model: '유효하지 않은 모델 이름입니다.',
+          network_error: '네트워크 오류로 연결할 수 없습니다.',
+          upstream_error: 'API 서버 오류가 발생했습니다.',
+        },
+      },
+      en: {
+        title: 'AGY SUITE HUD',
+        connecting: 'Connecting...',
+        filterActive: 'Active Slots',
+        filterAll: 'All Recent',
+        layoutAuto: 'Auto',
+        layoutCols: (n) => `${n} Col`,
+        settings: 'Settings',
+        refresh: 'Refresh',
+        undismissAll: (n) => `Restore Hidden (${n})`,
+        summaryRunning: (open, run) => `${open} visible · ${run} thinking live`,
+        summaryIdle: (open, total) => `${open} visible · ${total} recent`,
+        emptyDismissed: (n) =>
+          `No open active sessions. (${n} hidden — new activity reopens them automatically, or use "Restore Hidden" / "All Recent".)`,
+        emptyDefault: 'No reasoning sessions yet. Start a conversation in Antigravity and it will appear here.',
+        slotLabel: (slot, shortId) => (slot ? `Slot ${slot}` : `Archive (${shortId})`),
+        dismissedTag: 'Hidden',
+        statusComplete: 'Complete',
+        statusThinking: 'Thinking',
+        stepsSuffix: (n) => `${n} ${n === 1 ? 'step' : 'steps'}`,
+        restoreBtn: 'Restore',
+        restoringBtn: 'Restoring...',
+        pinBtn: 'Pin',
+        pinTitle: 'Keep pinned in active view',
+        focusBtn: 'Focus',
+        unfocusBtn: 'Exit',
+        focusTitle: 'Focus this session (Esc to return)',
+        reopenBtn: 'Reopen',
+        dismissTitle: 'Hide this card (auto-reopens on new thought)',
+        prevTurn: '◀ Prev',
+        nextTurn: 'Next ▶',
+        turnLabel: (cur, total, latest) =>
+          `Turn ${cur} / ${total}${latest ? ' (Latest)' : ' (History)'}`,
+        latestBtn: 'Latest',
+        latestLiveBtn: 'Live Thinking → Latest',
+        mainTab: 'Main',
+        swarmLiveTag: 'Live',
+        userPromptLabel: (n) => `User Input (Turn ${n})`,
+        swarmPromptLabel: (n) => `Swarm Assignment (Turn ${n})`,
+        noThoughtSteps: 'No reasoning steps were recorded for this turn.',
+        noThoughtBody: 'No reasoning body',
+        finalStepLabel: 'Final Reasoning',
+        stepLabel: (n) => `Step ${n}`,
+        showOriginal: 'Show raw reasoning summary',
+        showFinalReply: 'Show final reply for this turn',
+        loadingTurn: 'Loading turn history...',
+        turnLoadError: 'Failed to load turn history.',
+        jumpBottom: '↓ New thought',
+        modeNames: { raw: 'RAW · OFFLINE', gemini: 'GEMINI API', translate: 'TRANSLATE' },
+        modalTitle: 'AGY SUITE HUD Settings',
+        lblMode: 'Restoration & Network Mode (Default: Strictly Offline)',
+        optRawTitle: 'Raw Offline (Default)',
+        optRawDesc: '0 bytes sent externally. Cleans boilerplate and displays raw summaries locally.',
+        optGeminiTitle: 'Gemini API Restore',
+        optGeminiDesc: 'Calls official generativelanguage.googleapis.com only for 1st-person restoration.',
+        optTranslateTitle: 'Google Translate (Opt-In)',
+        optTranslateDesc: 'Sends reasoning summaries to translate.googleapis.com only with explicit consent.',
+        translateConsentText:
+          'Notice: Selecting Translate mode sends your reasoning summaries to an external endpoint (translate.googleapis.com). Do you consent to enabling Translate mode?',
+        translateCancel: 'Cancel',
+        translateConfirm: 'Confirm & Enable',
+        lblTargetLang: 'Target Language',
+        lblApiKey: 'Dedicated Gemini API Key (stored in secrets.json)',
+        apiKeyConfigured: (mask) => `Saved (${mask})`,
+        apiKeyNotSet: 'Not set',
+        apiKeyPlaceholder: 'Enter new key (leave blank to keep existing)',
+        apiKeyHint: 'Never reads ambient GEMINI_API_KEY env vars. Stored only in this plugin data directory.',
+        testKey: 'Test Key',
+        testingKey: 'Testing...',
+        clearKey: 'Clear Key',
+        keyClearedPending: 'Existing API key will be deleted when you save.',
+        lblModels: 'Model Chain (comma-separated, max 5)',
+        modelsHint: 'Default: gemini-2.5-flash, gemini-flash-lite-latest',
+        lblPreset: 'Monologue Prompt Preset',
+        presetEngineer: 'Concise First-Person Engineer Monologue (Default)',
+        presetBullet: 'Key-Point Bullets',
+        presetCustom: 'Custom Prompt',
+        lblCustomPrompt: 'Custom System Prompt (max 4000 chars)',
+        lblTimezone: 'Display Timezone (IANA)',
+        timezoneHint: 'Examples: Asia/Seoul, UTC, America/New_York, Europe/London',
+        cancel: 'Close',
+        save: 'Save',
+        saving: 'Saving...',
+        savedOk: 'Settings saved. (Historical turns are not automatically re-billed.)',
+        testOk: (m) => `Connected (${m})`,
+        testErr: {
+          invalid_key: 'API key authentication failed (401/403).',
+          model_not_found: 'Model not found (404).',
+          rate_limited: 'Rate limited. Please wait a few seconds.',
+          missing_key: 'Enter or save a Gemini API key first.',
+          invalid_model: 'Invalid model identifier.',
+          network_error: 'Network error while reaching Gemini API.',
+          upstream_error: 'Upstream Gemini API error.',
+        },
+      },
+    };
+
+    function safeGetStorage(key, fallback = '') {
+      try {
+        const val = localStorage.getItem(STORAGE_PREFIX + key);
+        return val === null ? fallback : val;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function safeSetStorage(key, val) {
+      try {
+        localStorage.setItem(STORAGE_PREFIX + key, val);
+      } catch {
+        // Ignore storage errors.
+      }
+    }
+
+    function loadInitialLang() {
+      return safeGetStorage('lang', 'ko') === 'en' ? 'en' : 'ko';
+    }
+
+    function loadInitialFilter() {
+      return safeGetStorage('filter', 'active') === 'all' ? 'all' : 'active';
+    }
+
+    function loadInitialCols() {
+      const val = safeGetStorage('cols', 'auto');
+      return val === '1' || val === '2' || val === '3' ? val : 'auto';
+    }
+
+    function loadInitialFontScale() {
+      const num = Number(safeGetStorage('font', '1'));
+      if (!Number.isFinite(num)) return 1;
+      return Math.min(1.36, Math.max(0.84, num));
+    }
+
+    function loadInitialPins() {
+      try {
+        const parsed = JSON.parse(safeGetStorage('pins', '[]'));
+        if (Array.isArray(parsed)) {
+          return new Set(parsed.filter((id) => typeof id === 'string' && id.length > 0));
+        }
+      } catch {
+        // Ignore corrupt JSON.
+      }
+      return new Set();
+    }
+
+    function getRoomToken() {
+      return document.querySelector('meta[name="room-token"]')?.getAttribute('content') || '';
+    }
+
+    let initialServerBootId =
+      document.querySelector('meta[name="server-boot-id"]')?.getAttribute('content') || '';
+    let didMigrateInitialPins = false;
+    let pendingPinRequests = 0;
+    let sseReconnectTimer = null;
+
+    const stateStore = {
+      lang: loadInitialLang(),
+      sessions: [],
+      restorationMode: 'raw',
+      settingsRevision: 1,
+      filterMode: loadInitialFilter(),
+      colsMode: loadInitialCols(),
+      fontScale: loadInitialFontScale(),
+      focusedConvId: null,
+      pinnedIds: loadInitialPins(),
+      openDetails: new Set(),
+      perConv: new Map(),
+    };
+
+    const modalState = {
+      selectedMode: 'raw',
+      pendingTranslateConsent: false,
+      clearApiKey: false,
+      hasApiKey: false,
+      apiKeyMask: '',
+    };
+
+    function t() {
+      return I18N[stateStore.lang] || I18N.ko;
+    }
+
+    document.documentElement.style.setProperty('--font-scale', String(stateStore.fontScale));
+
+    function savePins() {
+      safeSetStorage('pins', JSON.stringify([...stateStore.pinnedIds]));
+    }
+
+    async function postRoomJson(url, payload) {
+      return fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Room-Token': getRoomToken(),
+        },
+        body: JSON.stringify(payload),
+      });
+    }
+
+    function applyStaticI18n() {
+      const dict = t();
+      document.documentElement.lang = stateStore.lang;
+      document.title = dict.title;
+      document.getElementById('brandTitle').textContent = dict.title;
+      document.getElementById('filterActiveBtn').textContent = dict.filterActive;
+      document.getElementById('filterAllBtn').textContent = dict.filterAll;
+      document.querySelectorAll('.layout-btn').forEach((btn) => {
+        const c = btn.dataset.cols;
+        btn.textContent = c === 'auto' ? dict.layoutAuto : dict.layoutCols(c);
+      });
+      document.getElementById('settingsBtn').textContent = dict.settings;
+      document.getElementById('refreshBtn').textContent = dict.refresh;
+      document.getElementById('langKoBtn').classList.toggle('active', stateStore.lang === 'ko');
+      document.getElementById('langEnBtn').classList.toggle('active', stateStore.lang === 'en');
+
+      // Modal static labels
+      document.getElementById('modalTitle').textContent = dict.modalTitle;
+      document.getElementById('lblMode').textContent = dict.lblMode;
+      document.getElementById('optRawTitle').textContent = dict.optRawTitle;
+      document.getElementById('optRawDesc').textContent = dict.optRawDesc;
+      document.getElementById('optGeminiTitle').textContent = dict.optGeminiTitle;
+      document.getElementById('optGeminiDesc').textContent = dict.optGeminiDesc;
+      document.getElementById('optTranslateTitle').textContent = dict.optTranslateTitle;
+      document.getElementById('optTranslateDesc').textContent = dict.optTranslateDesc;
+      document.getElementById('translateConsentText').textContent = dict.translateConsentText;
+      document.getElementById('translateCancelBtn').textContent = dict.translateCancel;
+      document.getElementById('translateConfirmBtn').textContent = dict.translateConfirm;
+      document.getElementById('lblTargetLang').textContent = dict.lblTargetLang;
+      document.getElementById('lblApiKey').textContent = dict.lblApiKey;
+      document.getElementById('apiKeyInput').placeholder = dict.apiKeyPlaceholder;
+      document.getElementById('apiKeyHint').textContent = dict.apiKeyHint;
+      document.getElementById('testKeyBtn').textContent = dict.testKey;
+      document.getElementById('clearKeyBtn').textContent = dict.clearKey;
+      document.getElementById('lblModels').textContent = dict.lblModels;
+      document.getElementById('modelsHint').textContent = dict.modelsHint;
+      document.getElementById('lblPreset').textContent = dict.lblPreset;
+      const presetSel = document.getElementById('presetSelect');
+      presetSel.options[0].textContent = dict.presetEngineer;
+      presetSel.options[1].textContent = dict.presetBullet;
+      presetSel.options[2].textContent = dict.presetCustom;
+      document.getElementById('lblCustomPrompt').textContent = dict.lblCustomPrompt;
+      document.getElementById('lblTimezone').textContent = dict.lblTimezone;
+      document.getElementById('timezoneHint').textContent = dict.timezoneHint;
+      document.getElementById('cancelSettingsBtn').textContent = dict.cancel;
+      document.getElementById('saveSettingsBtn').textContent = dict.save;
+      updateApiKeyBadgeText();
+    }
+
+    function updateApiKeyBadgeText() {
+      const dict = t();
+      const badge = document.getElementById('apiKeyStatusBadge');
+      if (modalState.clearApiKey) {
+        badge.textContent = dict.keyClearedPending;
+      } else if (modalState.hasApiKey) {
+        badge.textContent = dict.apiKeyConfigured(modalState.apiKeyMask || '****');
+      } else {
+        badge.textContent = dict.apiKeyNotSet;
+      }
+    }
+
+    function maybeReloadOnNewBoot(bootId) {
+      if (!bootId || typeof bootId !== 'string') return false;
+      if (!initialServerBootId) {
+        initialServerBootId = bootId;
+        return false;
+      }
+      if (bootId !== initialServerBootId) {
+        const guardKey = STORAGE_PREFIX + 'reloaded_boot_id';
+        let lastReloaded = '';
+        try {
+          lastReloaded = sessionStorage.getItem(guardKey) || '';
+        } catch {
+          lastReloaded = '';
+        }
+        if (lastReloaded !== bootId) {
+          try {
+            sessionStorage.setItem(guardKey, bootId);
+          } catch {
+            // Ignore sessionStorage errors.
+          }
+          window.location.reload();
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function pruneStaleUiMaps() {
+      const keepIds = new Set();
+      for (const s of stateStore.sessions) {
+        keepIds.add(s.conversationId);
+        for (const w of s.swarmWorkers || []) {
+          keepIds.add(w.conversationId);
+        }
+      }
+      for (const pinnedId of stateStore.pinnedIds) keepIds.add(pinnedId);
+
+      for (const convId of [...stateStore.perConv.keys()]) {
+        if (!keepIds.has(convId)) stateStore.perConv.delete(convId);
+      }
+
+      for (const detailKey of [...stateStore.openDetails]) {
+        const sep = detailKey.indexOf(':');
+        const ownerConv = sep >= 0 ? detailKey.slice(0, sep) : detailKey;
+        if (!keepIds.has(ownerConv)) stateStore.openDetails.delete(detailKey);
+      }
+
+      if (stateStore.openDetails.size > 250) {
+        const excess = stateStore.openDetails.size - 250;
+        let removed = 0;
+        for (const k of [...stateStore.openDetails]) {
+          stateStore.openDetails.delete(k);
+          removed += 1;
+          if (removed >= excess) break;
+        }
+      }
+    }
+
+    function applyIncomingState(data) {
+      if (!data || typeof data !== 'object') return;
+      if (maybeReloadOnNewBoot(data.bootId)) return;
+
+      if (typeof data.restorationMode === 'string') {
+        stateStore.restorationMode = data.restorationMode;
+      }
+      if (typeof data.settingsRevision === 'number') {
+        stateStore.settingsRevision = data.settingsRevision;
+      }
+
+      if (Array.isArray(data.pinnedIds)) {
+        if (!didMigrateInitialPins) {
+          didMigrateInitialPins = true;
+          const serverSet = new Set(data.pinnedIds);
+          const localOnly = [...stateStore.pinnedIds].filter((id) => !serverSet.has(id));
+          if (localOnly.length > 0 && getRoomToken()) {
+            const merged = [...new Set([...data.pinnedIds, ...localOnly])];
+            stateStore.pinnedIds = new Set(merged);
+            savePins();
+            postRoomJson('/api/pin', { pinnedIds: merged }).catch(() => {});
+          } else {
+            stateStore.pinnedIds = serverSet;
+            savePins();
+          }
+        } else if (pendingPinRequests === 0) {
+          stateStore.pinnedIds = new Set(data.pinnedIds);
+          savePins();
+        }
+      }
+
+      if (Array.isArray(data.sessions)) {
+        stateStore.sessions = data.sessions;
+        pruneStaleUiMaps();
+        renderBoard();
+      }
+    }
+
+    function getConvUi(convId) {
+      if (!stateStore.perConv.has(convId)) {
+        stateStore.perConv.set(convId, {
+          selectedWorkerId: null,
+          customTurnIndex: null,
+          customUserStepIndex: null,
+          customTurnData: null,
+          loadingTurn: false,
+          turnLoadError: '',
+          reqSeq: 0,
+          restoring: false,
+          hasUnreadBottom: false,
+        });
+      }
+      return stateStore.perConv.get(convId);
+    }
+
+    function findTargetRecord(convId) {
+      for (const s of stateStore.sessions) {
+        if (s.conversationId === convId) return s;
+        for (const w of s.swarmWorkers || []) {
+          if (w.conversationId === convId) return w;
+        }
+      }
+      return null;
+    }
+
+    function escapeHtml(raw) {
+      return String(raw ?? '')
+        .replace(/\x00/g, '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatInlineMarkdown(escapedLine) {
+      const placeholders = [];
+      const stash = (html) => {
+        const token = `\x00PH${placeholders.length}\x00`;
+        placeholders.push(html);
+        return token;
+      };
+
+      let text = String(escapedLine || '').replace(/\x00/g, '');
+      text = text.replace(/`([^`\n]+)`/g, (_m, code) => stash(`<code>${code}</code>`));
+      text = text.replace(/\[([^\]]+)\]\((?:file:\/\/|https?:\/\/)[^)\s]+\)/g, (_m, label) =>
+        stash(`<span class="md-link-chip">${label}</span>`),
+      );
+      text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      text = text.replace(/(^|\s)_([^_\n]+)_(\s|$)/g, '$1<em>$2</em>$3');
+
+      for (let pass = 0; pass < 6 && /\x00PH\d+\x00/.test(text); pass += 1) {
+        text = text.replace(/\x00PH(\d+)\x00/g, (_m, idx) => placeholders[Number(idx)] || '');
+      }
+      return text;
+    }
+
+    function isLikelySubheading(escapedInner) {
+      const plain = String(escapedInner || '')
+        .replace(/`/g, '')
+        .trim();
+      if (!plain || plain.length > 90) return false;
+      if (/[.?!。]$/.test(plain)) return false;
+      if (/[.?!]\s+\S/.test(plain)) return false;
+      return true;
+    }
+
+    function unwrapAccidentalBoldBody(escapedLine) {
+      const trimmed = String(escapedLine || '').trim();
+      const match = trimmed.match(/^\*\*([^*]+)\*\*$/);
+      if (match && !isLikelySubheading(match[1])) {
+        return match[1].trim();
+      }
+      return escapedLine;
+    }
+
+    function renderSafeThoughtHtml(rawMarkdown) {
+      const text = String(rawMarkdown || '').replace(/\x00/g, '').replace(/\r\n/g, '\n').trim();
+      if (!text) return `<p><em>(${escapeHtml(t().noThoughtBody)})</em></p>`;
+
+      const escaped = escapeHtml(text);
+      const fenceBlocks = [];
+      const pushFence = (codeBody) => {
+        const idx = fenceBlocks.length;
+        fenceBlocks.push(`<pre><code>${codeBody.replace(/^\n+|\n+$/g, '')}</code></pre>`);
+        return `\n\n\x00FENCE${idx}\x00\n\n`;
+      };
+
+      let withoutFences = escaped.replace(/```([^\n`]*)\n([\s\S]*?)```/g, (_m, _lang, code) =>
+        pushFence(code),
+      );
+      withoutFences = withoutFences.replace(/```([^`\n]+)```/g, (_m, code) => pushFence(code));
+
+      const paragraphs = withoutFences.split(/\n{2,}/);
+      const htmlParts = [];
+
+      for (const rawBlock of paragraphs) {
+        const block = rawBlock.trim();
+        if (!block) continue;
+
+        const fenceMatch = block.match(/^\x00FENCE(\d+)\x00$/);
+        if (fenceMatch) {
+          htmlParts.push(fenceBlocks[Number(fenceMatch[1])] || '');
+          continue;
+        }
+
+        const lines = block.split('\n');
+        const firstTrim = lines[0].trim();
+        const subheadMatch = firstTrim.match(/^\*\*([^*]+)\*\*$/);
+
+        if (subheadMatch && isLikelySubheading(subheadMatch[1])) {
+          const subheadHtml = formatInlineMarkdown(subheadMatch[1].trim());
+          if (lines.length === 1) {
+            htmlParts.push(`<span class="thought-subhead">${subheadHtml}</span>`);
+            continue;
+          }
+          const rest = lines
+            .slice(1)
+            .map((line) => formatInlineMarkdown(unwrapAccidentalBoldBody(line)))
+            .join('<br />');
+          htmlParts.push(`<span class="thought-subhead">${subheadHtml}</span><p>${rest}</p>`);
+          continue;
+        }
+
+        const renderedLines = lines
+          .map((line) => formatInlineMarkdown(unwrapAccidentalBoldBody(line)))
+          .join('<br />');
+        htmlParts.push(`<p>${renderedLines}</p>`);
+      }
+
+      return htmlParts
+        .join('')
+        .replace(/\x00FENCE(\d+)\x00/g, (_m, idx) => fenceBlocks[Number(idx)] || '');
+    }
+
+    function summarizeToolChips(toolNames) {
+      if (!Array.isArray(toolNames) || toolNames.length === 0) return '';
+      const counts = new Map();
+      for (const name of toolNames) {
+        if (!name) continue;
+        counts.set(name, (counts.get(name) || 0) + 1);
+      }
+      const html = [];
+      for (const [name, cnt] of counts.entries()) {
+        const label = cnt > 1 ? `${name} ×${cnt}` : name;
+        html.push(`<span class="tool-chip">${escapeHtml(label)}</span>`);
+      }
+      return html.join('');
+    }
+
+    function getMountedSessions() {
+      const all = stateStore.sessions;
+      if (stateStore.filterMode === 'all') return all;
+      return all.filter(
+        (s) => !s.isDismissed && (s.isActive || stateStore.pinnedIds.has(s.conversationId)),
+      );
+    }
+
+    function applyGridClasses(effectiveVisibleCount) {
+      const board = document.getElementById('board');
+      board.classList.remove('cols-1', 'cols-2', 'cols-3', 'single-row', 'two-rows');
+
+      let cols = 1;
+      if (stateStore.focusedConvId) cols = 1;
+      else if (stateStore.colsMode === 'auto') cols = effectiveVisibleCount <= 1 ? 1 : 2;
+      else cols = Number(stateStore.colsMode) || 1;
+
+      board.classList.add(`cols-${cols}`);
+      board.classList.add(effectiveVisibleCount > cols ? 'two-rows' : 'single-row');
+    }
+
+    function computeTurnRenderSig(session, activeWorker, targetRecord, displayedTurn, cardUi, targetUi) {
+      const stepsSig = (displayedTurn?.steps || [])
+        .map(
+          (s) =>
+            `${s.stepIndex}:${s.isRestored ? 1 : 0}:${(s.displayText || '').length}:${(s.displayText || '').slice(0, 12)}`,
+        )
+        .join(',');
+      const workersSummary = (session.swarmWorkers || [])
+        .map(
+          (w) =>
+            `${w.conversationId}:${w.workerName}:${w.totalTurns}:${w.latestTurn?.status || ''}:${w.latestTurn?.stepCount ?? 0}`,
+        )
+        .join(';');
+      return [
+        stateStore.lang,
+        stateStore.restorationMode,
+        stateStore.settingsRevision,
+        stateStore.filterMode,
+        session.slot || 0,
+        session.isDismissed ? 1 : 0,
+        session.sessionTopic || '',
+        session.totalTurns,
+        session.latestTurn?.status || '',
+        cardUi.selectedWorkerId || '',
+        activeWorker?.conversationId || '',
+        targetRecord.conversationId,
+        targetRecord.totalTurns,
+        targetRecord.latestTurn?.status || '',
+        targetUi.customTurnIndex === null ? 'latest' : targetUi.customTurnIndex,
+        displayedTurn?.turnIndex ?? -1,
+        displayedTurn?.userStepIndex ?? -1,
+        displayedTurn?.status || '',
+        displayedTurn?.timeFormatted || '',
+        (displayedTurn?.finalReply || '').length,
+        displayedTurn?.needsRestoreCount ?? 0,
+        targetUi.loadingTurn ? 1 : 0,
+        targetUi.turnLoadError || '',
+        targetUi.restoring ? 1 : 0,
+        stateStore.pinnedIds.has(session.conversationId) ? 1 : 0,
+        stateStore.focusedConvId === session.conversationId ? 1 : 0,
+        workersSummary,
+        stepsSig,
+      ].join('|');
+    }
+
+    function buildStepsMarkup(convId, displayedTurn, { isSwarmWorker = false } = {}) {
+      const dict = t();
+      const steps = displayedTurn.steps || [];
+      const parts = [];
+      const promptHeading = isSwarmWorker
+        ? dict.swarmPromptLabel(displayedTurn.turnNumber)
+        : dict.userPromptLabel(displayedTurn.turnNumber);
+
+      parts.push(`
+        <div class="user-prompt-box">
+          <div class="user-prompt-label">
+            <span>${escapeHtml(promptHeading)}</span>
+            <span>${escapeHtml(displayedTurn.timestampFormatted || '')}</span>
+          </div>
+          <div class="user-prompt-text">${escapeHtml(displayedTurn.userPrompt)}</div>
+        </div>
+      `);
+
+      if (steps.length === 0) {
+        parts.push(
+          `<div class="step-block"><div class="thought-prose"><p><em>(${escapeHtml(dict.noThoughtSteps)})</em></p></div></div>`,
+        );
+      } else {
+        parts.push('<div class="steps-list">');
+        for (const step of steps) {
+          const turnKey =
+            typeof displayedTurn.userStepIndex === 'number'
+              ? `u${displayedTurn.userStepIndex}`
+              : `t${displayedTurn.turnIndex}`;
+          const origKey = `${convId}:${turnKey}:s${step.stepIndex}:orig`;
+          const isOpenOrig = stateStore.openDetails.has(origKey) ? ' open' : '';
+          const roleLabel = step.isFinal ? dict.finalStepLabel : dict.stepLabel(step.stepNumber);
+          const toolsHtml = summarizeToolChips(step.toolNames);
+
+          parts.push(`
+            <div class="step-block">
+              <div class="step-meta">
+                <span class="step-title">${escapeHtml(roleLabel)} · #${escapeHtml(step.stepIndex)} · ${escapeHtml(step.timeFormatted || '')}</span>
+                <span class="tool-chips">${toolsHtml}</span>
+              </div>
+              <div class="thought-prose">${renderSafeThoughtHtml(step.displayText)}</div>
+              ${
+                step.showOriginal
+                  ? `<details class="sub-toggle" data-detail-key="${escapeHtml(origKey)}"${isOpenOrig}>
+                      <summary>${escapeHtml(dict.showOriginal)}</summary>
+                      <div class="sub-toggle-body">${escapeHtml(step.enText)}</div>
+                    </details>`
+                  : ''
+              }
+            </div>
+          `);
+        }
+        parts.push('</div>');
+      }
+
+      if (displayedTurn.finalReply) {
+        const turnKey =
+          typeof displayedTurn.userStepIndex === 'number'
+            ? `u${displayedTurn.userStepIndex}`
+            : `t${displayedTurn.turnIndex}`;
+        const replyKey = `${convId}:${turnKey}:reply`;
+        const isOpenReply = stateStore.openDetails.has(replyKey) ? ' open' : '';
+        parts.push(`
+          <details class="sub-toggle" data-detail-key="${escapeHtml(replyKey)}"${isOpenReply}>
+            <summary>${escapeHtml(dict.showFinalReply)}</summary>
+            <div class="sub-toggle-body">${escapeHtml(displayedTurn.finalReply)}</div>
+          </details>
+        `);
+      }
+
+      return parts.join('');
+    }
+
+    async function checkHealthForBootChange() {
+      try {
+        const res = await fetch('/api/health');
+        if (!res.ok) return;
+        const data = await res.json();
+        maybeReloadOnNewBoot(data?.bootId);
+      } catch {
+        // Ignore offline errors.
+      }
+    }
+
+    async function togglePinSession(convId, sessionIsDismissed) {
+      const shouldPin = !stateStore.pinnedIds.has(convId);
+      if (shouldPin) {
+        stateStore.pinnedIds.add(convId);
+        if (sessionIsDismissed) {
+          const target = stateStore.sessions.find((s) => s.conversationId === convId);
+          if (target) target.isDismissed = false;
+        }
+      } else {
+        stateStore.pinnedIds.delete(convId);
+      }
+      savePins();
+      renderBoard();
+
+      pendingPinRequests += 1;
+      try {
+        const res = await postRoomJson('/api/pin', { conversationId: convId, pinned: shouldPin });
+        if (!res.ok) {
+          if (res.status === 403 || res.status === 401) await checkHealthForBootChange();
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const data = await res.json();
+        if (data.ok && Array.isArray(data.pinnedIds)) {
+          stateStore.pinnedIds = new Set(data.pinnedIds);
+          savePins();
+          renderBoard();
+        }
+      } catch {
+        await fetchStateManual();
+      } finally {
+        pendingPinRequests = Math.max(0, pendingPinRequests - 1);
+      }
+    }
+
+    async function dismissSession(convId) {
+      if (stateStore.pinnedIds.has(convId)) {
+        stateStore.pinnedIds.delete(convId);
+        savePins();
+      }
+      if (stateStore.focusedConvId === convId) stateStore.focusedConvId = null;
+      const target = stateStore.sessions.find((s) => s.conversationId === convId);
+      if (target) target.isDismissed = true;
+      renderBoard();
+
+      try {
+        const res = await postRoomJson('/api/dismiss', { conversationId: convId });
+        if (!res.ok) {
+          if (res.status === 403 || res.status === 401) await checkHealthForBootChange();
+          throw new Error(`HTTP ${res.status}`);
+        }
+      } catch {
+        await fetchStateManual();
+      }
+    }
+
+    async function undismissSession(convIdOrAll) {
+      if (convIdOrAll === null) {
+        for (const s of stateStore.sessions) s.isDismissed = false;
+      } else {
+        const target = stateStore.sessions.find((s) => s.conversationId === convIdOrAll);
+        if (target) target.isDismissed = false;
+      }
+      renderBoard();
+
+      try {
+        const res = await postRoomJson(
+          '/api/undismiss',
+          convIdOrAll === null ? { all: true } : { conversationId: convIdOrAll },
+        );
+        if (!res.ok) {
+          if (res.status === 403 || res.status === 401) await checkHealthForBootChange();
+          throw new Error(`HTTP ${res.status}`);
+        }
+      } catch {
+        await fetchStateManual();
+      }
+    }
+
+    async function selectTurn(convId, targetIndex, totalTurns) {
+      const ui = getConvUi(convId);
+      const reqId = ++ui.reqSeq;
+
+      if (targetIndex === null || targetIndex >= totalTurns - 1) {
+        ui.customTurnIndex = null;
+        ui.customUserStepIndex = null;
+        ui.customTurnData = null;
+        ui.loadingTurn = false;
+        ui.turnLoadError = '';
+        renderBoard();
+        return;
+      }
+
+      const clamped = Math.max(0, Math.min(totalTurns - 1, targetIndex));
+      const targetRec = findTargetRecord(convId);
+      const targetUserStep =
+        targetRec &&
+        Array.isArray(targetRec.turnUserStepIndices) &&
+        typeof targetRec.turnUserStepIndices[clamped] === 'number'
+          ? targetRec.turnUserStepIndices[clamped]
+          : null;
+
+      ui.customTurnIndex = clamped;
+      ui.customUserStepIndex = targetUserStep;
+      ui.customTurnData = null;
+      ui.loadingTurn = true;
+      ui.turnLoadError = '';
+      renderBoard();
+
+      try {
+        const qs = new URLSearchParams({ conv: convId, index: String(clamped) });
+        if (targetUserStep !== null) qs.set('userStep', String(targetUserStep));
+        const res = await fetch(`/api/turn?${qs.toString()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (reqId !== ui.reqSeq) return;
+        if (data.ok && data.turn) {
+          ui.customTurnData = data.turn;
+          if (typeof data.turn.turnIndex === 'number') ui.customTurnIndex = data.turn.turnIndex;
+          if (typeof data.turn.userStepIndex === 'number') {
+            ui.customUserStepIndex = data.turn.userStepIndex;
+          }
+        } else {
+          ui.turnLoadError = t().turnLoadError;
+        }
+      } catch {
+        if (reqId !== ui.reqSeq) return;
+        ui.turnLoadError = t().turnLoadError;
+      } finally {
+        if (reqId === ui.reqSeq) {
+          ui.loadingTurn = false;
+          renderBoard();
+        }
+      }
+    }
+
+    async function restoreDisplayedTurn(convId, turnIndex, userStepIndex) {
+      const ui = getConvUi(convId);
+      if (ui.restoring) return;
+      ui.restoring = true;
+      renderBoard();
+
+      try {
+        const res = await postRoomJson('/api/restore-turn', {
+          conversationId: convId,
+          turnIndex,
+          userStepIndex: typeof userStepIndex === 'number' ? userStepIndex : undefined,
+        });
+        if (!res.ok) {
+          if (res.status === 403 || res.status === 401) await checkHealthForBootChange();
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const data = await res.json();
+        if (data.ok && data.turn) {
+          const matchesCustom =
+            ui.customTurnIndex !== null &&
+            ((typeof userStepIndex === 'number' && ui.customUserStepIndex === userStepIndex) ||
+              ui.customTurnIndex === turnIndex);
+          if (matchesCustom) {
+            ui.customTurnData = data.turn;
+          } else {
+            const target = findTargetRecord(convId);
+            if (target && target.latestTurn && target.latestTurn.turnIndex === data.turn.turnIndex) {
+              target.latestTurn = data.turn;
+            }
+          }
+        }
+      } catch {
+        // Ignore transient restore error.
+      } finally {
+        ui.restoring = false;
+        renderBoard();
+      }
+    }
+
+    function ensureCardElement(convId) {
+      const board = document.getElementById('board');
+      let card = board.querySelector(`article.session-card[data-conv="${CSS.escape(convId)}"]`);
+      if (card) return card;
+
+      card = document.createElement('article');
+      card.className = 'session-card';
+      card.dataset.conv = convId;
+      card.dataset.renderedSig = '';
+      card.dataset.activeTargetConv = convId;
+      card.innerHTML = `
+        <div class="card-header"></div>
+        <div class="card-body"></div>
+        <button type="button" class="jump-bottom-pill"></button>
+      `;
+
+      const bodyEl = card.querySelector('.card-body');
+      const pillEl = card.querySelector('.jump-bottom-pill');
+
+      bodyEl.addEventListener('scroll', () => {
+        const nearBottom = bodyEl.scrollHeight - bodyEl.scrollTop - bodyEl.clientHeight <= 56;
+        if (nearBottom) {
+          const activeTargetId = card.dataset.activeTargetConv || convId;
+          const ui = getConvUi(activeTargetId);
+          ui.hasUnreadBottom = false;
+          pillEl.classList.remove('visible');
+        }
+      });
+
+      pillEl.addEventListener('click', () => {
+        const activeTargetId = card.dataset.activeTargetConv || convId;
+        const ui = getConvUi(activeTargetId);
+        ui.hasUnreadBottom = false;
+        pillEl.classList.remove('visible');
+        bodyEl.scrollTo({ top: bodyEl.scrollHeight, behavior: 'smooth' });
+      });
+
+      card.addEventListener(
+        'toggle',
+        (ev) => {
+          const det = ev.target;
+          if (det && det.tagName === 'DETAILS' && det.dataset.detailKey) {
+            if (det.open) stateStore.openDetails.add(det.dataset.detailKey);
+            else stateStore.openDetails.delete(det.dataset.detailKey);
+          }
+        },
+        true,
+      );
+
+      board.appendChild(card);
+      return card;
+    }
+
+    function buildSwarmTabsMarkup(session, activeWorker) {
+      const workers = Array.isArray(session.swarmWorkers) ? session.swarmWorkers : [];
+      if (workers.length === 0) return '';
+
+      const dict = t();
+      const liveTag = escapeHtml(dict.swarmLiveTag || 'Live');
+      const mainRunning = Boolean(session.latestTurn && session.latestTurn.status === 'thinking');
+      const pills = [
+        `<button type="button" class="swarm-tab${mainRunning ? ' running' : ''} ${!activeWorker ? 'active' : ''}" data-worker-id="">${
+          mainRunning ? '<span class="swarm-live-dot"></span>' : ''
+        }${escapeHtml(dict.mainTab)}${mainRunning ? `<span class="swarm-live-tag">${liveTag}</span>` : ''}</button>`,
+      ];
+
+      // Float actively running workers to the front so live swarms stand out immediately without scrolling.
+      const orderedWorkers = [...workers].sort((a, b) => {
+        const aRun = Boolean(a?.latestTurn && a.latestTurn.status === 'thinking');
+        const bRun = Boolean(b?.latestTurn && b.latestTurn.status === 'thinking');
+        if (aRun !== bRun) return aRun ? -1 : 1;
+        return 0;
+      });
+
+      for (const w of orderedWorkers) {
+        const isSelected = Boolean(activeWorker && activeWorker.conversationId === w.conversationId);
+        const isRunning = Boolean(w.latestTurn && w.latestTurn.status === 'thinking');
+        pills.push(
+          `<button type="button" class="swarm-tab worker${isRunning ? ' running' : ''} ${isSelected ? 'active' : ''}" data-worker-id="${escapeHtml(
+            w.conversationId,
+          )}" title="${escapeHtml(w.workerName)} (${escapeHtml(w.shortId)})">${
+            isRunning ? '<span class="swarm-live-dot"></span>' : ''
+          }${escapeHtml(w.displayLabel || w.workerName)}${
+            isRunning ? `<span class="swarm-live-tag">${liveTag}</span>` : ''
+          }</button>`,
+        );
+      }
+
+      return `<div class="swarm-tab-bar">${pills.join('')}</div>`;
+    }
+
+    function updateCard(card, session) {
+      const dict = t();
+      const convId = session.conversationId;
+      const cardUi = getConvUi(convId);
+      const workers = Array.isArray(session.swarmWorkers) ? session.swarmWorkers : [];
+
+      let activeWorker = cardUi.selectedWorkerId
+        ? workers.find((w) => w.conversationId === cardUi.selectedWorkerId) || null
+        : null;
+      if (cardUi.selectedWorkerId && !activeWorker) {
+        cardUi.selectedWorkerId = null;
+      }
+
+      const targetRecord = activeWorker || session;
+      const targetConvId = targetRecord.conversationId;
+      const targetUi = getConvUi(targetConvId);
+      const isSwarmView = Boolean(activeWorker);
+
+      if (
+        targetUi.customTurnIndex !== null &&
+        targetUi.customUserStepIndex !== null &&
+        Array.isArray(targetRecord.turnUserStepIndices)
+      ) {
+        const anchoredIdx = targetRecord.turnUserStepIndices.indexOf(targetUi.customUserStepIndex);
+        if (anchoredIdx >= 0) targetUi.customTurnIndex = anchoredIdx;
+      }
+
+      const isFollowingLatest =
+        targetUi.customTurnIndex === null || targetUi.customTurnIndex >= targetRecord.totalTurns - 1;
+      if (isFollowingLatest && targetUi.customTurnIndex !== null) {
+        targetUi.reqSeq += 1;
+        targetUi.customTurnIndex = null;
+        targetUi.customUserStepIndex = null;
+        targetUi.customTurnData = null;
+        targetUi.loadingTurn = false;
+        targetUi.turnLoadError = '';
+      }
+
+      const displayedTurn = isFollowingLatest ? targetRecord.latestTurn : targetUi.customTurnData;
+      const headerTurn = displayedTurn || targetRecord.latestTurn;
+      const currentIdx = !isFollowingLatest ? targetUi.customTurnIndex : targetRecord.totalTurns - 1;
+      const sig = computeTurnRenderSig(
+        session,
+        activeWorker,
+        targetRecord,
+        displayedTurn,
+        cardUi,
+        targetUi,
+      );
+
+      const hasRunningSwarm = workers.some((w) => w.latestTurn && w.latestTurn.status === 'thinking');
+      const hiddenByFocus = Boolean(stateStore.focusedConvId && stateStore.focusedConvId !== convId);
+      card.classList.toggle('hidden-by-focus', hiddenByFocus);
+      card.classList.toggle('dismissed-card', Boolean(session.isDismissed));
+      card.classList.toggle('swarm-view', isSwarmView);
+      card.classList.toggle('thinking', targetRecord.latestTurn.status === 'thinking' && !session.isDismissed);
+      card.classList.toggle('has-running-swarm', hasRunningSwarm && !session.isDismissed);
+
+      const pillEl = card.querySelector('.jump-bottom-pill');
+      pillEl.textContent = dict.jumpBottom;
+
+      if (card.dataset.renderedSig === sig) return;
+
+      const headerEl = card.querySelector('.card-header');
+      const bodyEl = card.querySelector('.card-body');
+
+      const prevTargetConvId = card.dataset.activeTargetConv || '';
+      const switchedTab = Boolean(prevTargetConvId && prevTargetConvId !== targetConvId);
+      const wasFollowingLatest = card.dataset.followingLatest !== '0';
+      const returnedToLatest = !wasFollowingLatest && isFollowingLatest;
+      const wasFirstRender = !card.dataset.renderedSig;
+      const wasNearBottom =
+        wasFirstRender ||
+        switchedTab ||
+        returnedToLatest ||
+        bodyEl.scrollHeight - bodyEl.scrollTop - bodyEl.clientHeight <= 60;
+      const prevScrollTop = bodyEl.scrollTop;
+
+      const isPinned = stateStore.pinnedIds.has(convId);
+      const isFocused = stateStore.focusedConvId === convId;
+      const slotLabel = dict.slotLabel(session.slot, session.shortId);
+      const isDone = headerTurn.status === 'complete';
+      const statusClass = isDone ? 'done' : 'running';
+      const statusText = isDone ? dict.statusComplete : dict.statusThinking;
+
+      const showRestoreBtn = Boolean(
+        stateStore.restorationMode !== 'raw' && displayedTurn && displayedTurn.needsRestoreCount > 0,
+      );
+      const hasNewerLive = !isFollowingLatest && targetRecord.latestTurn.status === 'thinking';
+      const swarmTabsHtml = buildSwarmTabsMarkup(session, activeWorker);
+
+      headerEl.innerHTML = `
+        <div class="card-top-row">
+          <div class="slot-meta">
+            <span class="slot-badge ${session.slot ? '' : 'unslotted'}">${escapeHtml(slotLabel)}</span>
+            ${
+              activeWorker
+                ? `<span class="swarm-badge">${escapeHtml(
+                    activeWorker.displayLabel || activeWorker.workerName,
+                  )}</span>`
+                : ''
+            }
+            ${session.isDismissed ? `<span class="dismissed-tag">${escapeHtml(dict.dismissedTag)}</span>` : ''}
+            <span class="status-pill ${statusClass}">${escapeHtml(statusText)} · ${escapeHtml(dict.stepsSuffix(headerTurn.stepCount))}</span>
+            <span class="session-topic" title="${escapeHtml(session.sessionTopic)} (${escapeHtml(targetConvId)})">${escapeHtml(session.sessionTopic)}</span>
+          </div>
+          <div class="card-actions">
+            ${
+              showRestoreBtn
+                ? `<button type="button" class="btn btn-restore act-restore" ${targetUi.restoring ? 'disabled' : ''}>${escapeHtml(
+                    targetUi.restoring ? dict.restoringBtn : dict.restoreBtn,
+                  )}</button>`
+                : ''
+            }
+            <button type="button" class="btn ${isPinned ? 'active' : ''} act-pin" title="${escapeHtml(dict.pinTitle)}">${escapeHtml(dict.pinBtn)}</button>
+            <button type="button" class="btn ${isFocused ? 'active' : ''} act-focus" title="${escapeHtml(dict.focusTitle)}">${escapeHtml(
+              isFocused ? dict.unfocusBtn : dict.focusBtn,
+            )}</button>
+            ${
+              session.isDismissed
+                ? `<button type="button" class="btn btn-outline act-reopen">${escapeHtml(dict.reopenBtn)}</button>`
+                : `<button type="button" class="btn btn-close act-dismiss" title="${escapeHtml(dict.dismissTitle)}">✕</button>`
+            }
+          </div>
+        </div>
+        ${swarmTabsHtml}
+        <div class="turn-nav-row">
+          <div class="turn-controls">
+            <button type="button" class="btn btn-outline act-prev" ${currentIdx <= 0 ? 'disabled' : ''}>${escapeHtml(dict.prevTurn)}</button>
+            <span class="turn-label">${escapeHtml(dict.turnLabel(currentIdx + 1, targetRecord.totalTurns, isFollowingLatest))}</span>
+            <button type="button" class="btn btn-outline act-next" ${currentIdx >= targetRecord.totalTurns - 1 ? 'disabled' : ''}>${escapeHtml(dict.nextTurn)}</button>
+            ${
+              !isFollowingLatest
+                ? `<button type="button" class="btn ${hasNewerLive ? 'btn-restore' : 'active'} act-latest">${escapeHtml(
+                    hasNewerLive ? dict.latestLiveBtn : dict.latestBtn,
+                  )}</button>`
+                : ''
+            }
+          </div>
+          <span class="turn-time">${escapeHtml(targetRecord.shortId)} · ${escapeHtml(headerTurn.timeFormatted || '')}</span>
+        </div>
+      `;
+
+      headerEl.querySelectorAll('.swarm-tab').forEach((tabBtn) => {
+        tabBtn.addEventListener('click', () => {
+          const nextWorkerId = tabBtn.dataset.workerId || null;
+          if ((cardUi.selectedWorkerId || null) === nextWorkerId) return;
+          cardUi.selectedWorkerId = nextWorkerId;
+          if (getRoomToken()) {
+            postRoomJson('/api/select-worker', {
+              parentConvId: convId,
+              conversationId: nextWorkerId || '',
+            }).catch(() => {});
+          }
+          renderBoard();
+        });
+      });
+
+      headerEl.querySelector('.act-pin')?.addEventListener('click', () => {
+        togglePinSession(convId, Boolean(session.isDismissed));
+      });
+      headerEl.querySelector('.act-focus')?.addEventListener('click', () => {
+        stateStore.focusedConvId = stateStore.focusedConvId === convId ? null : convId;
+        renderBoard();
+      });
+      headerEl.querySelector('.act-dismiss')?.addEventListener('click', () => {
+        dismissSession(convId);
+      });
+      headerEl.querySelector('.act-reopen')?.addEventListener('click', () => {
+        undismissSession(convId);
+      });
+      headerEl.querySelector('.act-prev')?.addEventListener('click', () => {
+        selectTurn(targetConvId, currentIdx - 1, targetRecord.totalTurns);
+      });
+      headerEl.querySelector('.act-next')?.addEventListener('click', () => {
+        selectTurn(targetConvId, currentIdx + 1, targetRecord.totalTurns);
+      });
+      headerEl.querySelector('.act-latest')?.addEventListener('click', () => {
+        selectTurn(targetConvId, null, targetRecord.totalTurns);
+      });
+      headerEl.querySelector('.act-restore')?.addEventListener('click', () => {
+        if (displayedTurn) {
+          restoreDisplayedTurn(targetConvId, displayedTurn.turnIndex, displayedTurn.userStepIndex);
+        }
+      });
+
+      if (targetUi.loadingTurn) {
+        bodyEl.innerHTML = `<div class="step-block"><div class="thought-prose"><p>${escapeHtml(dict.loadingTurn)}</p></div></div>`;
+      } else if (!displayedTurn) {
+        bodyEl.innerHTML = `<div class="step-block"><div class="thought-prose"><p>${escapeHtml(
+          targetUi.turnLoadError || dict.turnLoadError,
+        )}</p></div></div>`;
+      } else {
+        bodyEl.innerHTML = buildStepsMarkup(targetConvId, displayedTurn, {
+          isSwarmWorker: isSwarmView,
+        });
+      }
+
+      card.dataset.activeTargetConv = targetConvId;
+      card.dataset.followingLatest = isFollowingLatest ? '1' : '0';
+      card.dataset.renderedSig = sig;
+
+      requestAnimationFrame(() => {
+        bodyEl.style.scrollBehavior = 'auto';
+        if (!isFollowingLatest) {
+          bodyEl.scrollTop = switchedTab ? 0 : prevScrollTop;
+          targetUi.hasUnreadBottom = false;
+          pillEl.classList.remove('visible');
+        } else if (wasNearBottom) {
+          bodyEl.scrollTop = bodyEl.scrollHeight;
+          targetUi.hasUnreadBottom = false;
+          pillEl.classList.remove('visible');
+        } else {
+          bodyEl.scrollTop = prevScrollTop;
+          if (!wasFirstRender) {
+            targetUi.hasUnreadBottom = true;
+            pillEl.classList.add('visible');
+          }
+        }
+        requestAnimationFrame(() => {
+          bodyEl.style.scrollBehavior = '';
+        });
+      });
+    }
+
+    function renderBoard() {
+      const dict = t();
+      const board = document.getElementById('board');
+      const mounted = getMountedSessions();
+
+      const modeBadge = document.getElementById('modeBadge');
+      modeBadge.className = `mode-badge mode-${stateStore.restorationMode}`;
+      modeBadge.textContent = dict.modeNames[stateStore.restorationMode] || stateStore.restorationMode;
+
+      if (
+        stateStore.focusedConvId &&
+        !mounted.some((s) => s.conversationId === stateStore.focusedConvId)
+      ) {
+        stateStore.focusedConvId = null;
+      }
+
+      const openActiveCount = stateStore.sessions.filter((s) => s.isActive && !s.isDismissed).length;
+      const dismissedCount = stateStore.sessions.filter((s) => s.isDismissed).length;
+      const runningCount = stateStore.sessions.filter((s) => {
+        if (!s.isActive || s.isDismissed) return false;
+        if (s.latestTurn.status === 'thinking') return true;
+        return (s.swarmWorkers || []).some((w) => w.latestTurn?.status === 'thinking');
+      }).length;
+
+      document.getElementById('summaryStatus').textContent =
+        runningCount > 0
+          ? dict.summaryRunning(openActiveCount, runningCount)
+          : dict.summaryIdle(openActiveCount, stateStore.sessions.length);
+
+      const undismissBarBtn = document.getElementById('undismissBarBtn');
+      if (dismissedCount > 0) {
+        undismissBarBtn.textContent = dict.undismissAll(dismissedCount);
+        undismissBarBtn.classList.add('visible');
+      } else {
+        undismissBarBtn.classList.remove('visible');
+      }
+
+      document
+        .getElementById('filterActiveBtn')
+        .classList.toggle('active', stateStore.filterMode === 'active');
+      document
+        .getElementById('filterAllBtn')
+        .classList.toggle('active', stateStore.filterMode === 'all');
+      document.querySelectorAll('.layout-btn').forEach((b) => {
+        b.classList.toggle('active', b.dataset.cols === stateStore.colsMode && !stateStore.focusedConvId);
+      });
+
+      const effectiveVisibleCount = stateStore.focusedConvId ? 1 : mounted.length;
+      applyGridClasses(Math.max(1, effectiveVisibleCount));
+
+      if (mounted.length === 0) {
+        board.querySelectorAll('article.session-card').forEach((el) => el.remove());
+        const emptyMsg = dismissedCount > 0 ? dict.emptyDismissed(dismissedCount) : dict.emptyDefault;
+        board.innerHTML = `<div class="empty-state"><div>${escapeHtml(emptyMsg)}</div></div>`;
+        return;
+      }
+
+      const emptyEl = board.querySelector('.empty-state');
+      if (emptyEl) emptyEl.remove();
+
+      const mountedIds = new Set(mounted.map((s) => s.conversationId));
+      board.querySelectorAll('article.session-card').forEach((el) => {
+        if (!mountedIds.has(el.dataset.conv)) el.remove();
+      });
+
+      mounted.forEach((session, idx) => {
+        const card = ensureCardElement(session.conversationId);
+        if (board.children[idx] !== card) {
+          board.insertBefore(card, board.children[idx] || null);
+        }
+        updateCard(card, session);
+      });
+    }
+
+    // Settings Modal Logic
+    function syncModalModeVisibility() {
+      document.querySelectorAll('.mode-option').forEach((btn) => {
+        btn.classList.toggle('selected', btn.dataset.mode === modalState.selectedMode);
+      });
+      const isGemini = modalState.selectedMode === 'gemini';
+      const isRaw = modalState.selectedMode === 'raw';
+      document.getElementById('targetLangGroup').style.display = isRaw ? 'none' : 'flex';
+      document.getElementById('geminiConfigSection').style.display = isGemini ? 'flex' : 'none';
+      document.getElementById('modelsGroup').style.display = isGemini ? 'flex' : 'none';
+      document.getElementById('presetGroup').style.display = isGemini ? 'flex' : 'none';
+      const isCustomPreset = isGemini && document.getElementById('presetSelect').value === 'custom';
+      document.getElementById('customPromptGroup').style.display = isCustomPreset ? 'flex' : 'none';
+      document
+        .getElementById('translateConsentBox')
+        .classList.toggle('visible', modalState.pendingTranslateConsent);
+    }
+
+    async function openSettingsModal() {
+      const modal = document.getElementById('settingsModal');
+      const feedback = document.getElementById('settingsFeedback');
+      const testResult = document.getElementById('testKeyResult');
+      feedback.textContent = '';
+      feedback.className = 'status-banner';
+      testResult.textContent = '';
+      testResult.className = 'status-banner';
+      modalState.clearApiKey = false;
+      modalState.pendingTranslateConsent = false;
+      document.getElementById('apiKeyInput').value = '';
+
+      try {
+        const res = await fetch('/api/settings');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (data.ok && data.settings) {
+          modalState.selectedMode = data.settings.mode || 'raw';
+          modalState.hasApiKey = Boolean(data.hasApiKey);
+          modalState.apiKeyMask = data.apiKeyMask || '';
+          document.getElementById('targetLangSelect').value = data.settings.targetLang || 'ko';
+          document.getElementById('modelsInput').value = (data.settings.models || []).join(', ');
+          document.getElementById('presetSelect').value = data.settings.presetId || 'engineer-default';
+          document.getElementById('customPromptInput').value = data.settings.customPrompt || '';
+          document.getElementById('timezoneInput').value = data.settings.timezone || 'Asia/Seoul';
+        }
+      } catch {
+        // Keep defaults on error.
+      }
+
+      updateApiKeyBadgeText();
+      syncModalModeVisibility();
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeSettingsModal() {
+      const modal = document.getElementById('settingsModal');
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      modalState.pendingTranslateConsent = false;
+    }
+
+    async function handleSaveSettings() {
+      const dict = t();
+      const saveBtn = document.getElementById('saveSettingsBtn');
+      const feedback = document.getElementById('settingsFeedback');
+      saveBtn.disabled = true;
+      saveBtn.textContent = dict.saving;
+      feedback.textContent = '';
+      feedback.className = 'status-banner';
+
+      const rawModels = document
+        .getElementById('modelsInput')
+        .value.split(/[\n,]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const payload = {
+        mode: modalState.selectedMode,
+        targetLang: document.getElementById('targetLangSelect').value,
+        presetId: document.getElementById('presetSelect').value,
+        customPrompt: document.getElementById('customPromptInput').value,
+        timezone: document.getElementById('timezoneInput').value.trim(),
+      };
+      if (modalState.selectedMode === 'gemini' || rawModels.length > 0) {
+        payload.models = rawModels;
+      }
+
+      const enteredKey = document.getElementById('apiKeyInput').value.trim();
+      if (modalState.clearApiKey) {
+        payload.clearApiKey = true;
+      } else if (enteredKey) {
+        payload.apiKey = enteredKey;
+      }
+
+      try {
+        const res = await postRoomJson('/api/settings', payload);
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          feedback.textContent = data.error || `HTTP ${res.status}`;
+          feedback.className = 'status-banner err';
+          return;
+        }
+        modalState.hasApiKey = Boolean(data.hasApiKey);
+        modalState.apiKeyMask = data.apiKeyMask || '';
+        modalState.clearApiKey = false;
+        document.getElementById('apiKeyInput').value = '';
+        updateApiKeyBadgeText();
+        feedback.textContent = dict.savedOk;
+        feedback.className = 'status-banner ok';
+        await fetchStateManual();
+      } catch {
+        feedback.textContent = dict.testErr.network_error;
+        feedback.className = 'status-banner err';
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = dict.save;
+      }
+    }
+
+    async function handleTestApiKey() {
+      const dict = t();
+      const btn = document.getElementById('testKeyBtn');
+      const resultEl = document.getElementById('testKeyResult');
+      btn.disabled = true;
+      btn.textContent = dict.testingKey;
+      resultEl.textContent = '';
+      resultEl.className = 'status-banner';
+
+      const firstModel = document
+        .getElementById('modelsInput')
+        .value.split(/[\n,]+/)
+        .map((s) => s.trim())
+        .filter(Boolean)[0];
+
+      try {
+        const res = await postRoomJson('/api/test-key', {
+          apiKey: document.getElementById('apiKeyInput').value.trim(),
+          model: firstModel || '',
+        });
+        const data = await res.json();
+        if (data.ok) {
+          resultEl.textContent = dict.testOk(data.model || '');
+          resultEl.className = 'status-banner ok';
+        } else {
+          resultEl.textContent = dict.testErr[data.code] || data.error || `Error (${data.status || 0})`;
+          resultEl.className = 'status-banner err';
+        }
+      } catch {
+        resultEl.textContent = dict.testErr.network_error;
+        resultEl.className = 'status-banner err';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = dict.testKey;
+      }
+    }
+
+    async function fetchStateManual() {
+      try {
+        const res = await fetch('/api/state');
+        if (!res.ok) return;
+        const data = await res.json();
+        applyIncomingState(data);
+      } catch {
+        // Ignore transient offline error.
+      }
+    }
+
+    function connectSse() {
+      if (sseReconnectTimer) {
+        clearTimeout(sseReconnectTimer);
+        sseReconnectTimer = null;
+      }
+      const dot = document.getElementById('connDot');
+      const es = new EventSource('/api/events');
+
+      es.onopen = () => {
+        dot.classList.remove('disconnected');
+        checkHealthForBootChange();
+      };
+
+      es.addEventListener('state', (ev) => {
+        try {
+          applyIncomingState(JSON.parse(ev.data));
+        } catch {
+          // Ignore malformed event.
+        }
+      });
+
+      es.onerror = () => {
+        dot.classList.add('disconnected');
+        if (es.readyState === EventSource.CLOSED) {
+          es.close();
+          if (!sseReconnectTimer) {
+            sseReconnectTimer = setTimeout(() => {
+              sseReconnectTimer = null;
+              checkHealthForBootChange();
+              connectSse();
+            }, 2000);
+          }
+        }
+      };
+    }
+
+    document.getElementById('undismissBarBtn').addEventListener('click', () => undismissSession(null));
+
+    document.getElementById('filterActiveBtn').addEventListener('click', () => {
+      stateStore.filterMode = 'active';
+      stateStore.focusedConvId = null;
+      safeSetStorage('filter', 'active');
+      renderBoard();
+    });
+
+    document.getElementById('filterAllBtn').addEventListener('click', () => {
+      stateStore.filterMode = 'all';
+      stateStore.focusedConvId = null;
+      safeSetStorage('filter', 'all');
+      renderBoard();
+    });
+
+    document.querySelectorAll('.layout-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        stateStore.colsMode = btn.dataset.cols || 'auto';
+        stateStore.focusedConvId = null;
+        safeSetStorage('cols', stateStore.colsMode);
+        renderBoard();
+      });
+    });
+
+    document.getElementById('fontDownBtn').addEventListener('click', () => {
+      stateStore.fontScale = Math.max(0.84, Math.round((stateStore.fontScale - 0.06) * 100) / 100);
+      document.documentElement.style.setProperty('--font-scale', String(stateStore.fontScale));
+      safeSetStorage('font', String(stateStore.fontScale));
+    });
+
+    document.getElementById('fontUpBtn').addEventListener('click', () => {
+      stateStore.fontScale = Math.min(1.36, Math.round((stateStore.fontScale + 0.06) * 100) / 100);
+      document.documentElement.style.setProperty('--font-scale', String(stateStore.fontScale));
+      safeSetStorage('font', String(stateStore.fontScale));
+    });
+
+    document.getElementById('langKoBtn').addEventListener('click', () => {
+      stateStore.lang = 'ko';
+      safeSetStorage('lang', 'ko');
+      applyStaticI18n();
+      renderBoard();
+    });
+
+    document.getElementById('langEnBtn').addEventListener('click', () => {
+      stateStore.lang = 'en';
+      safeSetStorage('lang', 'en');
+      applyStaticI18n();
+      renderBoard();
+    });
+
+    document.getElementById('settingsBtn').addEventListener('click', openSettingsModal);
+    document.getElementById('closeSettingsBtn').addEventListener('click', closeSettingsModal);
+    document.getElementById('cancelSettingsBtn').addEventListener('click', closeSettingsModal);
+    document.getElementById('saveSettingsBtn').addEventListener('click', handleSaveSettings);
+    document.getElementById('testKeyBtn').addEventListener('click', handleTestApiKey);
+    document.getElementById('clearKeyBtn').addEventListener('click', () => {
+      modalState.clearApiKey = true;
+      document.getElementById('apiKeyInput').value = '';
+      updateApiKeyBadgeText();
+    });
+    document.getElementById('apiKeyInput').addEventListener('input', (ev) => {
+      if (ev.target.value.trim().length > 0 && modalState.clearApiKey) {
+        modalState.clearApiKey = false;
+        updateApiKeyBadgeText();
+      }
+    });
+
+    document.querySelectorAll('.mode-option').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const nextMode = btn.dataset.mode;
+        if (nextMode === 'translate' && modalState.selectedMode !== 'translate') {
+          modalState.pendingTranslateConsent = true;
+          syncModalModeVisibility();
+          return;
+        }
+        modalState.pendingTranslateConsent = false;
+        modalState.selectedMode = nextMode;
+        syncModalModeVisibility();
+      });
+    });
+
+    document.getElementById('translateCancelBtn').addEventListener('click', () => {
+      modalState.pendingTranslateConsent = false;
+      syncModalModeVisibility();
+    });
+
+    document.getElementById('translateConfirmBtn').addEventListener('click', () => {
+      modalState.pendingTranslateConsent = false;
+      modalState.selectedMode = 'translate';
+      syncModalModeVisibility();
+    });
+
+    document.getElementById('presetSelect').addEventListener('change', syncModalModeVisibility);
+
+    document.getElementById('settingsModal').addEventListener('click', (ev) => {
+      if (ev.target === ev.currentTarget) closeSettingsModal();
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', () => window.location.reload());
+
+    window.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') {
+        const modal = document.getElementById('settingsModal');
+        if (modal.classList.contains('open')) {
+          closeSettingsModal();
+          return;
+        }
+        if (stateStore.focusedConvId) {
+          stateStore.focusedConvId = null;
+          renderBoard();
+        }
+      }
+    });
+
+    applyStaticI18n();
+    document.getElementById('summaryStatus').textContent = t().connecting;
+    fetchStateManual();
+    connectSse();
+  </script>
+</body>
+</html>

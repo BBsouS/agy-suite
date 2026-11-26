@@ -1,0 +1,18 @@
+{
+  "agy-suite-sync": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "node bin/memory-sync.mjs SessionStart",
+        "timeout": 8
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node bin/memory-sync.mjs Stop",
+        "timeout": 8
+      }
+    ]
+  }
+}

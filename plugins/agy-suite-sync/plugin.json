@@ -1,0 +1,13 @@
+{
+  "name": "agy-suite-sync",
+  "displayName": "AGY SUITE — Memory & Bridge",
+  "version": "1.0.0",
+  "description": "Cache-safe 2-tier Markdown memory (MEMORY.md + on-demand MEMORY_ARCHIVE.md), optional multi-PC async Git sync with 3-way merge and secret guard, and an on-demand WORK_NOTES.md inbox bridge.",
+  "logo": "assets/logo.svg",
+  "repository": "https://github.com/BBsouS/agy-suite",
+  "suggestedPrompts": [
+    "Check my MEMORY.md budget and sync status",
+    "Review pending items in WORK_NOTES.md using /work-notes",
+    "Compact completed entries from MEMORY.md into MEMORY_ARCHIVE.md"
+  ]
+}

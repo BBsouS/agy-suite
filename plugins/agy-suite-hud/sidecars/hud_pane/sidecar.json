@@ -1,0 +1,21 @@
+{
+  "command": "node",
+  "args": ["main.mjs"],
+  "restart_policy": "always",
+  "display_name": "AGY SUITE HUD",
+  "description": "Live reasoning stream, swarm worker switcher, auto-calibrating context compaction meter, and fail-closed quota telemetry in the Antigravity auxiliary pane.",
+  "has_web_ui": true,
+  "agent_permissions": {
+    "allows_user_interactions": false
+  },
+  "ui_config": {
+    "display_name": "AGY SUITE HUD",
+    "views": [
+      {
+        "path": "/",
+        "entrypoint": "SIDECAR_UI_ENTRYPOINT_AUX_PANE",
+        "title": "HUD"
+      }
+    ]
+  }
+}

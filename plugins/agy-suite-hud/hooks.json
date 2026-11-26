@@ -1,0 +1,19 @@
+{
+  "agy-suite-hud-thoughts": {
+    "enabled": true,
+    "PostInvocation": [
+      {
+        "type": "command",
+        "command": "node hooks/hook-entry.mjs PostInvocation",
+        "timeout": 10
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node hooks/hook-entry.mjs Stop",
+        "timeout": 10
+      }
+    ]
+  }
+}
