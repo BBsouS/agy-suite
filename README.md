@@ -54,6 +54,8 @@
    - 설정을 수정할 때는 반드시 `.agy-bak-*` 백업을 만들고, `--uninstall --restore-backups`로 깔끔하게 되돌릴 수 있습니다. `~/.gemini/config/config.json`은 절대 수정하지 않습니다.
 
 > **정직한 기술 고지 (Honest Disclosure)**
+> - **100% 바이브 코딩 제작물**: 이 저장소의 코드·테스트·문서는 100% AI 에이전트와의 바이브 코딩으로 작성·검증되었습니다. 외부 모델 2패스 보안·품질 감사와 `52개` 자동 테스트를 거쳤지만, 실제 환경에 적용하기 전에는 반드시 `npm test`와 `--dry-run` 결과를 직접 확인하시고 사용하시기 바랍니다.
+> - **속마음 1인칭 복원(Opt-In)의 원문 차이**: 기본 `raw` 모드는 추론 요약을 가공 없이 그대로 표시합니다. 다만 설정에서 선택형 **1인칭 독백 복원(`gemini` 모드)**을 켤 경우 번역 및 자연스러운 구어체 폴리싱 과정이 더해지므로, 출력 문장이 영문 원문 추론과 100% 직역 수준으로 일치하지 않을 수 있습니다(원문 그대로 보려면 기본 `raw` 모드를 사용하십시오).
 > - **내부 규격 의존성**: `transcript_full.jsonl`, `agy -p /usage`, `ConversationService`, `antigravity.heartbeatIntervalMs`는 Antigravity의 비공개 내부 인터페이스에 의존하므로 향후 업데이트에 따라 동작이 달라질 수 있습니다. 이를 대비해 어댑터를 격리하고 파싱 실패 시 추측치를 띄우지 않는 `fail-closed` 방식으로 설계했습니다.
 > - **Git 원격 동기화 신뢰 경계**: `MEMORY.md`는 `rules/`로 상시 로드되므로, 원격 저장소에 **푸시 권한이 있는 모든 주체는 완전 신뢰 대상**으로 간주해야 합니다(본인 단독 비공개 저장소만 사용). `GEMINI.md`는 기본값에서 **절대 동기화되지 않으며**, `sync/config.json`에서 `"syncGeminiMd": true`로 명시적 옵트인한 경우에만 추적됩니다. 충돌 복구가 필요할 때는 `memory-sync.mjs --resolve=local|remote`를 사용합니다.
 > - **`WORK_NOTES.md` 보안 조건**: 외부 봇·모바일 연동(`workNotesEnabled: true`) 시 반드시 **신뢰할 수 있는 본인 단독 비공개 저장소** 또는 **`MEMORY.md`와 분리된 `WORK_NOTES` 전용 저장소**만 사용해야 하며, `/work-notes`는 외부 노트를 신뢰할 수 없는 데이터로 간주해 실행 전 사용자의 명시적 확인을 받습니다.
